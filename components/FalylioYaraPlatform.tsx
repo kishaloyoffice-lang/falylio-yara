@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Search,
   Sparkles,
@@ -36,10 +36,29 @@ import {
   Menu,
   X,
   Compass,
+  Home,
+  Gamepad2,
+  Bot,
+  ShoppingCart,
+  Megaphone,
+  PlaySquare,
+  Newspaper,
+  Crown,
+  Settings,
+  Moon,
+  Bell,
+  ChevronRight,
+  ChevronLeft,
+  ChevronDown,
+  Zap,
+  Shield,
+  Star,
+  Trophy,
+  Play,
+  CheckCircle2,
+  ExternalLink,
 } from 'lucide-react';
-import { FyMonogram } from './BrandLogo';
 import {
-  POPULAR_CATEGORIES,
   PLATFORM_TOOLS,
   ALL_TOOL_CATEGORIES,
   YARA_AI_MODULES,
@@ -64,7 +83,7 @@ import {
 } from './InteractiveWorkbenches';
 import { AccountAndAdminModal } from './AccountAndAdminModal';
 
-function getIconComponent(iconName: string, className = 'h-5 w-5 text-[#0284C7]') {
+function getIconComponent(iconName: string, className = 'h-5 w-5 text-[#00D2FF]') {
   switch (iconName) {
     case 'Sparkles':
       return <Sparkles className={className} />;
@@ -127,16 +146,67 @@ function getIconComponent(iconName: string, className = 'h-5 w-5 text-[#0284C7]'
   }
 }
 
-export default function FalylioYaraPlatform() {
-  // Global Search State
-  const [globalQuery, setGlobalQuery] = useState('');
-  const [searchFocused, setSearchFocused] = useState(false);
+interface SidebarNavItem {
+  id: string;
+  label: string;
+  href: string;
+  icon: React.ReactNode;
+  badge?: string;
+}
 
-  // Mobile Menu State
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+const SIDEBAR_ITEMS: SidebarNavItem[] = [
+  { id: 'home', label: 'Home', href: '#top', icon: <Home className="h-4 w-4" /> },
+  { id: 'gaming', label: 'Gaming Zone', href: '#gaming-zone', icon: <Gamepad2 className="h-4 w-4" /> },
+  { id: 'tools', label: 'All Tools', href: '#all-tools', icon: <Wrench className="h-4 w-4" /> },
+  { id: 'ai', label: 'AI Center', href: '#ai-center', icon: <Bot className="h-4 w-4" />, badge: 'New' },
+  { id: 'apps', label: 'Apps & Software', href: '#apps-software', icon: <LayoutGrid className="h-4 w-4" /> },
+  { id: 'marketplace', label: 'Marketplace', href: '#marketplace', icon: <ShoppingCart className="h-4 w-4" /> },
+  { id: 'education', label: 'Education', href: '#education', icon: <GraduationCap className="h-4 w-4" /> },
+  { id: 'stock', label: 'Stock Media', href: '#stock-media', icon: <ImageIcon className="h-4 w-4" /> },
+  { id: 'social', label: 'Social Studio', href: '#social-studio', icon: <Megaphone className="h-4 w-4" /> },
+  { id: 'builder', label: 'Website Builder', href: '#website-builder', icon: <Code2 className="h-4 w-4" /> },
+  { id: 'business', label: 'Business Tools', href: '#business-tools', icon: <Briefcase className="h-4 w-4" /> },
+  { id: 'entertainment', label: 'Entertainment', href: '#entertainment', icon: <PlaySquare className="h-4 w-4" /> },
+  { id: 'community', label: 'News & Community', href: '#news-community', icon: <Globe className="h-4 w-4" /> },
+];
+
+const HERO_SLIDES = [
+  {
+    id: 'slide-1',
+    welcome: 'Welcome to',
+    subtitle: 'All-in-One Digital Platform',
+    tagline: 'Explore • Play • Learn • Create • Grow',
+  },
+  {
+    id: 'slide-2',
+    welcome: 'Discover Next-Gen',
+    subtitle: 'AI Studio, Tools & Gaming Hub',
+    tagline: 'Dream • Create • Grow with Falylio Yara',
+  },
+  {
+    id: 'slide-3',
+    welcome: 'Empowering Creators',
+    subtitle: '17+ Tool Categories & Courses',
+    tagline: 'Fast • Free • Worldwide Digital Ecosystem',
+  },
+];
+
+export default function FalylioYaraPlatform() {
+  // Active Sidebar Item
+  const [activeNav, setActiveNav] = useState<string>('home');
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
+  // Search States
+  const [globalQuery, setGlobalQuery] = useState('');
+  const [heroQuery, setHeroQuery] = useState('');
+  const [searchFocused, setSearchFocused] = useState(false);
+  const topSearchInputRef = useRef<HTMLInputElement>(null);
+
+  // Hero Slide State
+  const [heroSlideIndex, setHeroSlideIndex] = useState(0);
 
   // Tools Filtering State
-  const [selectedToolTab, setSelectedToolTab] = useState<'all' | 'popular' | 'recent' | 'recommended' | 'free'>('popular');
+  const [selectedToolTab, setSelectedToolTab] = useState<'all' | 'popular' | 'recent' | 'recommended' | 'free'>('all');
   const [selectedToolCategory, setSelectedToolCategory] = useState<ToolCategory | 'All'>('All');
   const [toolSearchQuery, setToolSearchQuery] = useState('');
 
@@ -153,10 +223,10 @@ export default function FalylioYaraPlatform() {
   // Community Filter State
   const [communityFilter, setCommunityFilter] = useState<string>('All');
 
-  // Interactive Task Planner State (Business & Productivity Section)
+  // Interactive Task Planner State
   const [tasks, setTasks] = useState([
-    { id: 't1', text: 'Review Q3 design system accessibility contrast ratios', done: true },
-    { id: 't2', text: 'Export client invoice summary PDF for milestone 2', done: false },
+    { id: 't1', text: 'Generate 4K YouTube Gaming & AI Studio thumbnail', done: true },
+    { id: 't2', text: 'Export client invoice PDF from Business Tools', done: false },
     { id: 't3', text: 'Complete Applied AI Engineering module quiz', done: false },
   ]);
   const [newTaskText, setNewTaskText] = useState('');
@@ -175,7 +245,7 @@ export default function FalylioYaraPlatform() {
   const [accountModalOpen, setAccountModalOpen] = useState(false);
   const [accountModalTab, setAccountModalTab] = useState<'dashboard' | 'auth' | 'admin' | 'architecture'>('dashboard');
 
-  // Favorites & Recently Viewed (Persisted in localStorage)
+  // Favorites & Recently Viewed
   const [favoriteIds, setFavoriteIds] = useState<string[]>(['tool-text-counter', 'tool-dev-json']);
   const [recentToolIds, setRecentToolIds] = useState<string[]>(['tool-office-invoice']);
 
@@ -186,8 +256,21 @@ export default function FalylioYaraPlatform() {
       if (savedFavs) setFavoriteIds(JSON.parse(savedFavs));
       if (savedRecents) setRecentToolIds(JSON.parse(savedRecents));
     } catch {
-      // Ignore storage access errors
+      // Ignore storage errors
     }
+  }, []);
+
+  // Ctrl + K keyboard shortcut to focus search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        topSearchInputRef.current?.focus();
+        setSearchFocused(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   const handleToggleFavorite = (id: string) => {
@@ -221,7 +304,8 @@ export default function FalylioYaraPlatform() {
     query: toolSearchQuery,
   });
 
-  const unifiedSearchResults = searchPlatformCatalog(globalQuery);
+  const activeSearchQuery = globalQuery.trim() || heroQuery.trim();
+  const unifiedSearchResults = searchPlatformCatalog(activeSearchQuery);
 
   const handleGlobalSearchAction = (targetId: string, sectionType: string) => {
     setSearchFocused(false);
@@ -243,6 +327,21 @@ export default function FalylioYaraPlatform() {
     }
   };
 
+  const handleHeroSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!heroQuery.trim()) {
+      document.getElementById('all-tools')?.scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
+    const results = searchPlatformCatalog(heroQuery.trim());
+    if (results.length > 0) {
+      handleGlobalSearchAction(results[0].id, results[0].sectionType);
+    } else {
+      setToolSearchQuery(heroQuery.trim());
+      document.getElementById('all-tools')?.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   const handleAddTask = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTaskText.trim()) return;
@@ -256,1328 +355,1175 @@ export default function FalylioYaraPlatform() {
     setContactSubmitted(true);
   };
 
+  const scrollToSection = (id: string, navId?: string) => {
+    if (navId) setActiveNav(navId);
+    setMobileSidebarOpen(false);
+    const cleanId = id.replace('#', '');
+    if (cleanId === 'top') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    const el = document.getElementById(cleanId);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const currentSlide = HERO_SLIDES[heroSlideIndex];
+
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8FAFC] text-[#0F172A]">
+    <div id="top" className="min-h-screen bg-[#060B19] text-white flex selection:bg-[#00D2FF]/30 selection:text-white">
       {/* =====================================================================
-          A. HEADER (Strict 3-Zone Top Bar Contract)
+          MOBILE SIDEBAR BACKDROP
          ===================================================================== */}
-      <header className="sticky top-0 z-40 border-b border-slate-200/90 bg-white/95 backdrop-blur-xs">
-        <div className="mx-auto flex max-w-[1360px] items-center justify-between gap-8 px-4 sm:px-6 lg:px-8 py-3.5">
-          {/* Zone 1: Single Brand Wordmark Lockup */}
-          <a
-            href="#top"
-            className="inline-flex items-center gap-2.5 text-lg font-bold tracking-tight text-[#0F172A] whitespace-nowrap shrink-0"
-            style={{ fontFamily: 'var(--font-display), sans-serif' }}
-          >
-            <FyMonogram className="h-8 w-8 shrink-0" />
-            <span>Falylio Yara</span>
-          </a>
+      {mobileSidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/70 backdrop-blur-xs lg:hidden"
+          onClick={() => setMobileSidebarOpen(false)}
+        />
+      )}
 
-          {/* Zone 2: 5 Concise Single-Line Navigation Links */}
-          <nav aria-label="Primary Navigation" className="hidden md:flex items-center gap-7 text-sm font-medium text-slate-600">
-            <a href="#popular-categories" className="hover:text-[#0F172A] hover:underline underline-offset-4 transition-colors whitespace-nowrap shrink-0">
-              Explore
-            </a>
-            <a href="#all-tools" className="hover:text-[#0F172A] hover:underline underline-offset-4 transition-colors whitespace-nowrap shrink-0">
-              Tools
-            </a>
-            <a href="#ai-center" className="hover:text-[#0F172A] hover:underline underline-offset-4 transition-colors whitespace-nowrap shrink-0">
-              AI Center
-            </a>
-            <a href="#marketplace" className="hover:text-[#0F172A] hover:underline underline-offset-4 transition-colors whitespace-nowrap shrink-0">
-              Marketplace
-            </a>
-            <a href="#education" className="hover:text-[#0F172A] hover:underline underline-offset-4 transition-colors whitespace-nowrap shrink-0">
-              Education
-            </a>
-          </nav>
-
-          {/* Zone 3: Primary Action */}
-          <div className="flex items-center gap-3 shrink-0">
+      {/* =====================================================================
+          LEFT FIXED SIDEBAR (Matches Reference Image)
+         ===================================================================== */}
+      <aside
+        aria-label="Sidebar Navigation"
+        className={`fixed top-0 left-0 bottom-0 z-50 w-[235px] bg-[#070D1F] border-r border-[#16264C] flex flex-col justify-between transition-transform duration-300 lg:translate-x-0 ${
+          mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        {/* Top Brand Lockup */}
+        <div>
+          <div className="pt-4 pb-3 px-4 border-b border-[#142242]/80 flex flex-col items-center text-center relative">
             <button
               type="button"
-              onClick={() => {
-                setAccountModalTab('dashboard');
-                setAccountModalOpen(true);
+              onClick={() => setMobileSidebarOpen(false)}
+              className="lg:hidden absolute right-3 top-3 p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10"
+              aria-label="Close Menu"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            <a
+              href="#top"
+              onClick={(e) => {
+                e.preventDefault();
+                scrollToSection('#top', 'home');
               }}
-              className="rounded-lg bg-[#0F172A] px-4 py-2 text-xs font-semibold text-white hover:bg-slate-800 transition-colors whitespace-nowrap shrink-0"
+              className="group flex flex-col items-center focus:outline-none"
             >
-              Account & Workspace
-            </button>
-            <button
-              type="button"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              aria-label="Toggle navigation menu"
-              className="md:hidden rounded-lg border border-slate-200 p-2 text-slate-700 hover:bg-slate-50"
-            >
-              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </button>
+              <div className="relative h-14 w-20 flex items-center justify-center">
+                <img
+                  src="/assets/fy/logo-mark.png"
+                  alt="Falylio Yara Crown Emblem"
+                  className="h-14 w-auto object-contain drop-shadow-[0_0_12px_rgba(0,210,255,0.45)]"
+                />
+              </div>
+              <div
+                className="mt-0.5 text-[19px] font-extrabold tracking-tight leading-none"
+                style={{ fontFamily: 'var(--font-display), sans-serif' }}
+              >
+                <span className="text-white">Falylio </span>
+                <span className="text-[#00D2FF]">Yara</span>
+              </div>
+              <div className="mt-1 text-[10px] font-medium tracking-wider text-slate-400">
+                Dream • Create • Grow
+              </div>
+            </a>
           </div>
+
+          {/* 13 Navigation Links */}
+          <nav className="px-3 py-2.5 space-y-0.5 overflow-y-auto max-h-[calc(100vh-290px)]">
+            {SIDEBAR_ITEMS.map((item) => {
+              const isActive = activeNav === item.id;
+              return (
+                <a
+                  key={item.id}
+                  href={item.href}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    scrollToSection(item.href, item.id);
+                  }}
+                  className={`flex items-center justify-between px-3.5 py-2 rounded-xl text-[13px] font-medium transition-all ${
+                    isActive
+                      ? 'bg-gradient-to-r from-[#00A8FF] via-[#0072FF] to-[#0051D5] text-white font-semibold shadow-[0_0_16px_rgba(0,140,255,0.45)]'
+                      : 'text-slate-300 hover:text-white hover:bg-[#101C38]'
+                  }`}
+                >
+                  <span className="flex items-center gap-3 truncate">
+                    <span className={isActive ? 'text-white' : 'text-slate-400'}>
+                      {item.icon}
+                    </span>
+                    <span className="truncate">{item.label}</span>
+                  </span>
+                  {item.badge && (
+                    <span className="ml-2 rounded-full bg-gradient-to-r from-[#7C3AED] to-[#9333EA] px-2 py-0.5 text-[10px] font-bold text-white shadow-[0_0_8px_rgba(147,51,234,0.5)]">
+                      {item.badge}
+                    </span>
+                  )}
+                </a>
+              );
+            })}
+          </nav>
         </div>
 
-        {/* Mobile Navigation Drawer */}
-        {mobileMenuOpen && (
-          <div className="md:hidden border-t border-slate-200 bg-white px-4 py-4 space-y-3">
-            <div className="grid grid-cols-2 gap-2 text-sm font-medium text-slate-700">
-              <a href="#popular-categories" onClick={() => setMobileMenuOpen(false)} className="rounded-lg px-3 py-2 hover:bg-slate-50">
-                Explore Categories
-              </a>
-              <a href="#all-tools" onClick={() => setMobileMenuOpen(false)} className="rounded-lg px-3 py-2 hover:bg-slate-50">
-                All Tools (17)
-              </a>
-              <a href="#ai-center" onClick={() => setMobileMenuOpen(false)} className="rounded-lg px-3 py-2 hover:bg-slate-50">
-                Yara AI Center
-              </a>
-              <a href="#marketplace" onClick={() => setMobileMenuOpen(false)} className="rounded-lg px-3 py-2 hover:bg-slate-50">
-                Marketplace
-              </a>
-              <a href="#education" onClick={() => setMobileMenuOpen(false)} className="rounded-lg px-3 py-2 hover:bg-slate-50">
-                Education & MCQs
-              </a>
-              <a href="#apps-software" onClick={() => setMobileMenuOpen(false)} className="rounded-lg px-3 py-2 hover:bg-slate-50">
-                Apps & Software
-              </a>
-              <a href="#business-productivity" onClick={() => setMobileMenuOpen(false)} className="rounded-lg px-3 py-2 hover:bg-slate-50">
-                Business & CV
-              </a>
-              <a href="#contact-footer" onClick={() => setMobileMenuOpen(false)} className="rounded-lg px-3 py-2 hover:bg-slate-50">
-                About & Contact
-              </a>
+        {/* Bottom Pro Member Card & Utility Icons */}
+        <div className="p-3 space-y-2.5 border-t border-[#142242]/80 bg-[#070D1F]">
+          <div className="rounded-2xl border border-[#1E3264] bg-gradient-to-b from-[#0E1936] to-[#091126] p-3.5 shadow-[0_0_20px_rgba(0,114,255,0.12)]">
+            <div className="flex items-center gap-2.5">
+              <div className="h-8 w-8 rounded-xl bg-amber-500/15 border border-amber-400/30 flex items-center justify-center text-amber-400 shrink-0">
+                <Crown className="h-4 w-4 fill-amber-400" />
+              </div>
+              <div className="leading-tight">
+                <div className="text-xs font-bold text-white">Upgrade to</div>
+                <div className="text-xs font-bold text-white">Pro Member</div>
+              </div>
             </div>
-          </div>
-        )}
-      </header>
-
-      {/* Secondary Quick-Jump Ecosystem Strip (Non-Sticky, Below Header) */}
-      <div className="border-b border-slate-200/80 bg-[#F0F7FF]">
-        <div className="mx-auto flex flex-wrap max-w-[1360px] items-center justify-between gap-x-4 gap-y-1.5 px-4 sm:px-6 lg:px-8 py-2 text-xs text-slate-600">
-          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
-            <span className="font-semibold text-[#0F172A]">Ecosystem:</span>
-            <a href="#all-tools" className="hover:text-[#0284C7] transition-colors whitespace-nowrap">17 Tool Categories</a>
-            <span aria-hidden="true">·</span>
-            <a href="#apps-software" className="hover:text-[#0284C7] transition-colors whitespace-nowrap">Apps & Software</a>
-            <span aria-hidden="true">·</span>
-            <a href="#stock-media" className="hover:text-[#0284C7] transition-colors whitespace-nowrap">Stock Media</a>
-            <span aria-hidden="true">·</span>
-            <a href="#social-studio" className="hover:text-[#0284C7] transition-colors whitespace-nowrap">Social Studio</a>
-            <span aria-hidden="true">·</span>
-            <a href="#web-builder" className="hover:text-[#0284C7] transition-colors whitespace-nowrap">Web Builder</a>
-            <span aria-hidden="true">·</span>
-            <a href="#business-productivity" className="hover:text-[#0284C7] transition-colors whitespace-nowrap">Business Suite</a>
-            <span aria-hidden="true">·</span>
-            <a href="#gaming-zone" className="hover:text-[#0284C7] transition-colors whitespace-nowrap">Logic Games</a>
-            <span aria-hidden="true">·</span>
-            <a href="#community-news" className="hover:text-[#0284C7] transition-colors whitespace-nowrap">Community</a>
-          </div>
-          <div className="flex items-center gap-3 whitespace-nowrap shrink-0">
+            <p className="mt-1.5 text-[11px] text-slate-400">
+              Unlock more features!
+            </p>
             <button
               type="button"
               onClick={() => {
                 setAccountModalTab('dashboard');
                 setAccountModalOpen(true);
               }}
-              className="hover:text-[#0284C7] font-medium tabular-nums"
+              className="mt-2.5 w-full rounded-xl bg-gradient-to-r from-[#00D2FF] via-[#3A7BD5] to-[#8B5CF6] py-2 text-xs font-bold text-white shadow-[0_0_15px_rgba(0,210,255,0.35)] hover:opacity-95 transition-opacity flex items-center justify-center gap-1.5"
             >
-              Saved Tools ({favoriteIds.length})
+              <span>Go Pro</span>
+              <ArrowRight className="h-3.5 w-3.5" />
             </button>
-            <span aria-hidden="true">·</span>
-            <button
-              type="button"
-              onClick={() => {
-                setAccountModalTab('auth');
-                setAccountModalOpen(true);
-              }}
-              className="hover:text-[#0284C7] font-medium"
-            >
-              Login / Sign Up
-            </button>
-            <span aria-hidden="true">·</span>
+          </div>
+
+          {/* Bottom 3 Circular Utility Buttons */}
+          <div className="flex items-center justify-around pt-0.5">
             <button
               type="button"
               onClick={() => {
                 setAccountModalTab('admin');
                 setAccountModalOpen(true);
               }}
-              className="hover:text-[#0284C7] font-medium"
+              aria-label="Platform Settings"
+              className="h-9 w-9 rounded-full bg-[#101B37] border border-[#1E3264] flex items-center justify-center text-slate-300 hover:text-white hover:border-[#00D2FF]/50 transition-colors"
             >
-              Admin Console
+              <Settings className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setAccountModalTab('architecture');
+                setAccountModalOpen(true);
+              }}
+              aria-label="Theme & Architecture"
+              className="h-9 w-9 rounded-full bg-[#101B37] border border-[#1E3264] flex items-center justify-center text-slate-300 hover:text-white hover:border-[#00D2FF]/50 transition-colors"
+            >
+              <Moon className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setAccountModalTab('dashboard');
+                setAccountModalOpen(true);
+              }}
+              aria-label="Notifications"
+              className="h-9 w-9 rounded-full bg-[#101B37] border border-[#1E3264] flex items-center justify-center text-slate-300 hover:text-white hover:border-[#00D2FF]/50 transition-colors"
+            >
+              <Bell className="h-4 w-4" />
             </button>
           </div>
         </div>
-      </div>
+      </aside>
 
-      <main id="top" className="flex-1">
-        {/* =====================================================================
-            B. HERO SECTION
-           ===================================================================== */}
-        <section className="relative border-b border-slate-200/80 bg-gradient-to-b from-[#F0F7FF] via-white to-white py-14 lg:py-20">
-          <div className="mx-auto max-w-[1360px] px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
-              {/* Left Column: Core Proposition & Global Search */}
-              <div className="lg:col-span-7 space-y-6">
-                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-medium text-[#0369A1]">
-                  <span className="whitespace-nowrap">Welcome to Falylio Yara</span>
-                  <span aria-hidden="true">·</span>
-                  <span className="whitespace-nowrap">Dream • Create • Grow</span>
-                  <span aria-hidden="true">·</span>
-                  <span className="whitespace-nowrap">All-in-One Digital Platform</span>
-                </div>
+      {/* =====================================================================
+          MAIN DASHBOARD CONTENT AREA
+         ===================================================================== */}
+      <div className="flex-1 lg:pl-[235px] flex flex-col min-w-0">
+        {/* TOP HEADER BAR */}
+        <header className="sticky top-0 z-30 h-[64px] bg-[#070D1F]/95 backdrop-blur-md border-b border-[#16264C] px-4 lg:px-6 flex items-center justify-between gap-4">
+          {/* Left: Mobile Menu Trigger + Global Search Bar */}
+          <div className="flex items-center gap-3 flex-1 max-w-xl relative">
+            <button
+              type="button"
+              onClick={() => setMobileSidebarOpen(true)}
+              aria-label="Open Navigation Menu"
+              className="lg:hidden h-10 w-10 rounded-xl bg-[#101B37] border border-[#1E3264] flex items-center justify-center text-slate-200 hover:text-white shrink-0"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
 
-                <h1
-                  className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-[#0F172A] leading-[1.15]"
-                  style={{ fontFamily: 'var(--font-display), sans-serif', textWrap: 'balance' }}
-                >
-                  Everything You Need, All in One Place
-                </h1>
+            <div className="relative flex-1">
+              <Search className="h-4 w-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                ref={topSearchInputRef}
+                type="search"
+                aria-label="Search anything"
+                value={globalQuery}
+                onFocus={() => setSearchFocused(true)}
+                onChange={(e) => {
+                  setGlobalQuery(e.target.value);
+                  setSearchFocused(true);
+                }}
+                placeholder="Search anything... (e.g. games, tools, AI)"
+                className="w-full h-10 rounded-full bg-[#0E172E] border border-[#1E3264] pl-10 pr-20 text-xs sm:text-sm text-white placeholder:text-slate-400 focus:outline-none focus:border-[#00D2FF] shadow-inner"
+              />
+              <span className="hidden sm:inline-flex items-center rounded-md bg-[#172546] border border-[#273E73] px-2 py-0.5 text-[11px] font-medium text-slate-300 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                Ctrl + K
+              </span>
 
-                <p className="max-w-2xl text-base sm:text-lg text-slate-600 leading-relaxed">
-                  A calm, unified digital workspace bringing together 17 categories of browser utilities, Yara AI assistants, structured courses, software directories, stock media, and creator templates—built for clarity and everyday productivity.
-                </p>
-
-                {/* Unified Global Search Bar */}
-                <div className="relative max-w-2xl">
-                  <form
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      setSearchFocused(true);
-                    }}
-                    className="flex items-center rounded-xl border border-slate-300 bg-white p-1.5 shadow-sm focus-within:border-[#0284C7]"
-                  >
-                    <Search className="ml-3 h-5 w-5 text-slate-400 shrink-0" />
-                    <input
-                      type="search"
-                      aria-label="Search tools, AI assistants, courses, apps, or templates"
-                      value={globalQuery}
-                      onFocus={() => setSearchFocused(true)}
-                      onChange={(e) => {
-                        setGlobalQuery(e.target.value);
-                        setSearchFocused(true);
-                      }}
-                      placeholder="Search tools, AI assistants, courses, invoices, JSON, or templates..."
-                      className="w-full bg-transparent px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none"
-                    />
-                    {globalQuery && (
-                      <button
-                        type="button"
-                        onClick={() => setGlobalQuery('')}
-                        aria-label="Clear search query"
-                        className="px-2 text-xs text-slate-400 hover:text-slate-600"
-                      >
-                        Clear
-                      </button>
-                    )}
+              {/* Live Global Search Dropdown */}
+              {searchFocused && globalQuery.trim().length > 0 && (
+                <div className="absolute left-0 right-0 top-full mt-2 rounded-2xl border border-[#1E3A78] bg-[#0B142B] p-3 shadow-2xl z-50">
+                  <div className="flex items-center justify-between pb-2 mb-2 border-b border-[#16264C]">
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                      Instant Results ({unifiedSearchResults.length})
+                    </span>
                     <button
-                      type="submit"
-                      className="rounded-lg bg-[#0F172A] px-5 py-2.5 text-xs font-semibold text-white hover:bg-slate-800 transition-colors whitespace-nowrap shrink-0"
+                      type="button"
+                      onClick={() => setSearchFocused(false)}
+                      className="text-xs text-slate-400 hover:text-white"
                     >
-                      Search Platform
+                      Close
                     </button>
-                  </form>
-
-                  {/* Live Global Search Dropdown Results */}
-                  {searchFocused && globalQuery.trim().length > 0 && (
-                    <div className="absolute left-0 right-0 top-full z-30 mt-2 max-h-80 overflow-y-auto rounded-xl border border-slate-200 bg-white p-3 shadow-lg">
-                      <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-2 px-2">
-                        <span className="text-xs font-medium text-slate-500 tabular-nums">
-                          {unifiedSearchResults.length} matching resources across Falylio Yara
-                        </span>
+                  </div>
+                  {unifiedSearchResults.length === 0 ? (
+                    <div className="py-4 text-center text-xs text-slate-400">
+                      No matching tools, games, AI modules, or courses found for &ldquo;{globalQuery}&rdquo;.
+                    </div>
+                  ) : (
+                    <div className="max-h-64 overflow-y-auto divide-y divide-[#142242]">
+                      {unifiedSearchResults.map((item) => (
                         <button
+                          key={`${item.sectionType}-${item.id}`}
                           type="button"
-                          onClick={() => setSearchFocused(false)}
-                          className="text-xs text-slate-500 hover:text-slate-800"
+                          onClick={() => handleGlobalSearchAction(item.id, item.sectionType)}
+                          className="w-full py-2.5 px-3 text-left hover:bg-[#132347] flex items-center justify-between gap-3 rounded-xl transition-colors"
                         >
-                          Close
+                          <div>
+                            <div className="text-xs font-semibold text-white">{item.title}</div>
+                            <div className="text-[11px] text-slate-400">{item.categoryLabel}</div>
+                          </div>
+                          <span className="rounded-full bg-[#0072FF]/20 border border-[#00D2FF]/40 px-2.5 py-0.5 text-[10px] font-semibold text-[#00D2FF] shrink-0">
+                            {item.sectionType}
+                          </span>
                         </button>
-                      </div>
-                      {unifiedSearchResults.length === 0 ? (
-                        <div className="p-4 text-center text-xs text-slate-500">
-                          No matches found for &ldquo;{globalQuery}&rdquo;. Try searching for &ldquo;PDF&rdquo;, &ldquo;JSON&rdquo;, &ldquo;Invoice&rdquo;, or &ldquo;TypeScript&rdquo;.
-                        </div>
-                      ) : (
-                        <div className="space-y-1">
-                          {unifiedSearchResults.map((item) => (
-                            <button
-                              key={item.id}
-                              type="button"
-                              onClick={() => handleGlobalSearchAction(item.actionTarget, item.sectionType)}
-                              className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left hover:bg-[#F0F7FF] transition-colors"
-                            >
-                              <div>
-                                <div className="text-sm font-semibold text-slate-900">{item.title}</div>
-                                <div className="text-xs text-slate-500">
-                                  {item.sectionType} · {item.categoryLabel}
-                                </div>
-                              </div>
-                              <span className="text-xs font-medium text-[#0284C7] whitespace-nowrap ml-3">
-                                Open →
-                              </span>
-                            </button>
-                          ))}
-                        </div>
-                      )}
+                      ))}
                     </div>
                   )}
                 </div>
+              )}
+            </div>
+          </div>
 
-                {/* Action Shortcuts */}
-                <div className="flex flex-wrap items-center gap-3 pt-1">
-                  <a
-                    href="#popular-categories"
-                    className="inline-flex items-center gap-2 rounded-lg bg-[#0284C7] px-5 py-2.5 text-xs font-semibold text-white hover:bg-[#0369A1] transition-colors whitespace-nowrap"
+          {/* Right Header Controls: Yara AI Button + Bell Badge + User Profile */}
+          <div className="flex items-center gap-3 sm:gap-4 shrink-0">
+            <button
+              type="button"
+              onClick={() => setActiveAiModule(YARA_AI_MODULES[0])}
+              className="h-10 px-4 rounded-full bg-gradient-to-r from-[#091E46] via-[#0D2E6E] to-[#123A85] border border-[#00D2FF]/70 shadow-[0_0_16px_rgba(0,210,255,0.35)] hover:shadow-[0_0_22px_rgba(0,210,255,0.55)] flex items-center gap-2 text-xs sm:text-sm font-bold text-white transition-all"
+            >
+              <Bot className="h-4 w-4 text-[#00D2FF]" />
+              <span>Yara AI</span>
+              <Sparkles className="h-3.5 w-3.5 text-amber-300" />
+            </button>
+
+            <div className="h-6 w-[1px] bg-[#1A2C56] hidden sm:block" />
+
+            <button
+              type="button"
+              onClick={() => {
+                setAccountModalTab('dashboard');
+                setAccountModalOpen(true);
+              }}
+              aria-label="Notifications (3 unread)"
+              className="relative h-10 w-10 rounded-full bg-[#0E172E] border border-[#1E3264] flex items-center justify-center text-slate-200 hover:text-white hover:border-[#00D2FF]/50 transition-colors"
+            >
+              <Bell className="h-4 w-4" />
+              <span className="absolute -top-1 -right-1 h-4 min-w-[16px] px-1 rounded-full bg-rose-500 text-[10px] font-extrabold text-white flex items-center justify-center shadow">
+                3
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setAccountModalTab('dashboard');
+                setAccountModalOpen(true);
+              }}
+              className="flex items-center gap-2 rounded-full p-0.5 pr-2 hover:bg-[#101C38] transition-colors"
+              aria-label="User Profile & Account"
+            >
+              <img
+                src="/assets/fy/user-avatar.png"
+                alt="User Profile Avatar"
+                className="h-9 w-9 rounded-full object-cover border border-[#00D2FF]/60"
+              />
+              <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
+            </button>
+          </div>
+        </header>
+
+        {/* MAIN SCROLLABLE WORKSPACE */}
+        <main className="flex-1 px-4 lg:px-5 py-4 space-y-5 max-w-[1600px] w-full mx-auto">
+          {/* =================================================================
+              HERO BANNER (Matches Reference Design 1:1)
+             ================================================================= */}
+          <section className="relative rounded-2xl overflow-hidden border border-[#1D356B] bg-[#070E22] shadow-[0_10px_40px_rgba(0,0,0,0.65)] min-h-[270px] sm:min-h-[300px] flex items-center">
+            {/* Right Gamer/Creator Artwork & Ambient Cyber Studio Backdrop */}
+            <div className="absolute inset-0 pointer-events-none select-none overflow-hidden">
+              <img
+                src="/assets/fy/hero-gamer.png"
+                alt="Falylio Yara Digital Studio"
+                className="absolute right-0 top-0 h-full w-full lg:w-[68%] object-cover object-right opacity-90"
+              />
+              {/* Smooth gradient masks so left typography is crisp and readable */}
+              <div className="absolute inset-0 bg-gradient-to-r from-[#060C1E] via-[#07112A]/90 lg:via-[#07112A]/65 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#060C1E] via-transparent to-[#060C1E]/40" />
+            </div>
+
+            {/* Left / Center Hero Content */}
+            <div className="relative z-10 w-full lg:w-[58%] px-5 sm:px-10 pt-6 pb-11 sm:py-6 flex flex-col items-center text-center">
+              {/* Welcome Pill */}
+              <div className="inline-flex items-center gap-2 text-sm sm:text-base font-bold text-white mb-1">
+                <span className="text-lg">👋</span>
+                <span>{currentSlide.welcome}</span>
+                <span className="text-lg">👋</span>
+              </div>
+
+              {/* Main Falylio Yara Heading */}
+              <h1
+                className="text-4xl sm:text-5xl md:text-[54px] font-black tracking-tight leading-none drop-shadow-[0_4px_24px_rgba(0,210,255,0.3)]"
+                style={{ fontFamily: 'var(--font-display), sans-serif' }}
+              >
+                <span className="text-white">Falylio </span>
+                <span className="bg-gradient-to-r from-[#00E5FF] via-[#00B8FF] to-[#0088FF] bg-clip-text text-transparent">
+                  Yara
+                </span>
+              </h1>
+
+              {/* Subtitle */}
+              <div className="mt-1.5 text-lg sm:text-2xl font-extrabold tracking-tight">
+                <span className="text-white">All-in-One Digital </span>
+                <span className="text-[#00D2FF]">Platform</span>
+              </div>
+
+              {/* Tagline */}
+              <p className="mt-1 text-xs sm:text-sm font-semibold text-slate-200 tracking-wide">
+                {currentSlide.tagline}
+              </p>
+
+              {/* Hero Search Bar */}
+              <form
+                onSubmit={handleHeroSearchSubmit}
+                className="mt-4 w-full max-w-lg relative flex items-center"
+              >
+                <Search className="h-4 w-4 text-slate-400 absolute left-4 pointer-events-none" />
+                <input
+                  type="text"
+                  value={heroQuery}
+                  onChange={(e) => setHeroQuery(e.target.value)}
+                  placeholder="Search for games, tools, apps..."
+                  aria-label="Search for games, tools, apps"
+                  className="w-full h-11 rounded-full bg-[#091328]/90 border border-[#244385] pl-11 pr-16 text-xs sm:text-sm text-white placeholder:text-slate-400 focus:outline-none focus:border-[#00D2FF] shadow-[0_0_25px_rgba(0,114,255,0.2)]"
+                />
+                <button
+                  type="submit"
+                  aria-label="Run Hero Search"
+                  className="absolute right-1.5 h-8 w-11 rounded-full bg-gradient-to-r from-[#00B4FF] to-[#0066FF] flex items-center justify-center text-white shadow-[0_0_15px_rgba(0,180,255,0.65)] hover:opacity-95 transition-opacity"
+                >
+                  <Search className="h-4 w-4" />
+                </button>
+              </form>
+
+              {/* 3 Trust Features Row */}
+              <div className="mt-4 flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-[11px] sm:text-xs font-medium text-slate-200">
+                <span className="inline-flex items-center gap-1.5">
+                  <Zap className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />
+                  <span>Fast &amp; Secure</span>
+                </span>
+                <span className="text-slate-600 hidden sm:inline">|</span>
+                <span className="inline-flex items-center gap-1.5">
+                  <Shield className="h-3.5 w-3.5 text-sky-400" />
+                  <span>100% Free</span>
+                </span>
+                <span className="text-slate-600 hidden sm:inline">|</span>
+                <span className="inline-flex items-center gap-1.5">
+                  <Globe className="h-3.5 w-3.5 text-cyan-400" />
+                  <span>Worldwide Access</span>
+                </span>
+              </div>
+            </div>
+
+            {/* Bottom Right Carousel Controls */}
+            <div className="absolute bottom-3 right-4 z-20 flex items-center gap-2">
+              <div className="flex items-center gap-1.5 mr-2">
+                {HERO_SLIDES.map((s, idx) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    aria-label={`Slide ${idx + 1}`}
+                    onClick={() => setHeroSlideIndex(idx)}
+                    className={`h-1.5 rounded-full transition-all ${
+                      heroSlideIndex === idx ? 'w-4 bg-[#00D2FF]' : 'w-1.5 bg-slate-500/60'
+                    }`}
+                  />
+                ))}
+              </div>
+              <button
+                type="button"
+                aria-label="Previous Slide"
+                onClick={() =>
+                  setHeroSlideIndex((prev) => (prev - 1 + HERO_SLIDES.length) % HERO_SLIDES.length)
+                }
+                className="h-7 w-7 rounded-full bg-[#0B1631]/85 border border-[#244385] flex items-center justify-center text-slate-300 hover:text-white hover:border-[#00D2FF]"
+              >
+                <ChevronLeft className="h-3.5 w-3.5" />
+              </button>
+              <button
+                type="button"
+                aria-label="Next Slide"
+                onClick={() => setHeroSlideIndex((prev) => (prev + 1) % HERO_SLIDES.length)}
+                className="h-7 w-7 rounded-full bg-[#0B1631]/85 border border-[#244385] flex items-center justify-center text-slate-300 hover:text-white hover:border-[#00D2FF]"
+              >
+                <ChevronRight className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          </section>
+
+          {/* =================================================================
+              POPULAR CATEGORIES (8 Glowing Cards Row)
+             ================================================================= */}
+          <section id="popular-categories" className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h2
+                className="text-base sm:text-lg font-bold text-white flex items-center gap-2"
+                style={{ fontFamily: 'var(--font-display), sans-serif' }}
+              >
+                <Star className="h-5 w-5 text-amber-400 fill-amber-400" />
+                <span>Popular Categories</span>
+              </h2>
+              <button
+                type="button"
+                onClick={() => scrollToSection('#all-tools', 'tools')}
+                className="text-xs font-semibold text-[#00D2FF] hover:underline inline-flex items-center gap-1"
+              >
+                <span>View All</span>
+                <ArrowRight className="h-3.5 w-3.5" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-8 gap-3">
+              {[
+                {
+                  id: 'cat-gaming',
+                  title: 'Gaming\nZone',
+                  href: '#gaming-zone',
+                  navId: 'gaming',
+                  glow: 'from-purple-600/25 via-indigo-900/20 to-[#0B132B]',
+                  border: 'border-purple-500/35 hover:border-purple-400',
+                  iconBg: 'bg-purple-500/20 text-purple-300 shadow-[0_0_20px_rgba(168,85,247,0.45)]',
+                  icon: <Gamepad2 className="h-6 w-6" />,
+                },
+                {
+                  id: 'cat-tools',
+                  title: 'All\nTools',
+                  href: '#all-tools',
+                  navId: 'tools',
+                  glow: 'from-emerald-600/25 via-teal-900/20 to-[#0B132B]',
+                  border: 'border-emerald-500/35 hover:border-emerald-400',
+                  iconBg: 'bg-emerald-500/20 text-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.45)]',
+                  icon: <Wrench className="h-6 w-6" />,
+                },
+                {
+                  id: 'cat-ai',
+                  title: 'AI\nCenter',
+                  href: '#ai-center',
+                  navId: 'ai',
+                  glow: 'from-sky-500/30 via-blue-900/25 to-[#0B132B]',
+                  border: 'border-[#00D2FF]/60 hover:border-[#00D2FF]',
+                  iconBg: 'bg-sky-500/25 text-[#00D2FF] shadow-[0_0_24px_rgba(0,210,255,0.6)]',
+                  icon: <Bot className="h-6 w-6" />,
+                },
+                {
+                  id: 'cat-apps',
+                  title: 'Apps &\nSoftware',
+                  href: '#apps-software',
+                  navId: 'apps',
+                  glow: 'from-amber-500/25 via-orange-900/20 to-[#0B132B]',
+                  border: 'border-amber-500/35 hover:border-amber-400',
+                  iconBg: 'bg-amber-500/20 text-amber-300 shadow-[0_0_20px_rgba(245,158,11,0.45)]',
+                  icon: <AppWindow className="h-6 w-6" />,
+                },
+                {
+                  id: 'cat-market',
+                  title: 'Marketplace',
+                  href: '#marketplace',
+                  navId: 'marketplace',
+                  glow: 'from-pink-600/25 via-rose-900/20 to-[#0B132B]',
+                  border: 'border-pink-500/35 hover:border-pink-400',
+                  iconBg: 'bg-pink-500/20 text-pink-300 shadow-[0_0_20px_rgba(236,72,153,0.45)]',
+                  icon: <ShoppingCart className="h-6 w-6" />,
+                },
+                {
+                  id: 'cat-edu',
+                  title: 'Education',
+                  href: '#education',
+                  navId: 'education',
+                  glow: 'from-teal-500/25 via-emerald-900/20 to-[#0B132B]',
+                  border: 'border-teal-500/35 hover:border-teal-400',
+                  iconBg: 'bg-teal-500/20 text-teal-300 shadow-[0_0_20px_rgba(20,184,166,0.45)]',
+                  icon: <GraduationCap className="h-6 w-6" />,
+                },
+                {
+                  id: 'cat-stock',
+                  title: 'Stock\nMedia',
+                  href: '#stock-media',
+                  navId: 'stock',
+                  glow: 'from-violet-600/25 via-purple-900/20 to-[#0B132B]',
+                  border: 'border-violet-500/35 hover:border-violet-400',
+                  iconBg: 'bg-violet-500/20 text-violet-300 shadow-[0_0_20px_rgba(139,92,246,0.45)]',
+                  icon: <ImageIcon className="h-6 w-6" />,
+                },
+                {
+                  id: 'cat-social',
+                  title: 'Social\nStudio',
+                  href: '#social-studio',
+                  navId: 'social',
+                  glow: 'from-yellow-500/25 via-amber-900/20 to-[#0B132B]',
+                  border: 'border-yellow-500/35 hover:border-yellow-400',
+                  iconBg: 'bg-yellow-500/20 text-yellow-300 shadow-[0_0_20px_rgba(234,179,8,0.45)]',
+                  icon: <Megaphone className="h-6 w-6" />,
+                },
+              ].map((cat) => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => scrollToSection(cat.href, cat.navId)}
+                  className={`group relative rounded-2xl border ${cat.border} bg-gradient-to-b ${cat.glow} p-3.5 flex flex-col items-center justify-between min-h-[112px] text-center transition-all hover:-translate-y-0.5`}
+                >
+                  <div className={`h-11 w-11 rounded-2xl flex items-center justify-center ${cat.iconBg}`}>
+                    {cat.icon}
+                  </div>
+                  <div className="mt-2 text-xs font-bold text-white whitespace-pre-line leading-tight">
+                    {cat.title}
+                  </div>
+                  <span className="absolute bottom-2.5 right-2.5 h-5 w-5 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-300 group-hover:text-white group-hover:border-white/30">
+                    <ChevronRight className="h-3 w-3" />
+                  </span>
+                </button>
+              ))}
+            </div>
+          </section>
+
+          {/* =================================================================
+              MIDDLE 3-COLUMN BENTO ROW:
+              1. Featured Games | 2. Trending AI Tools | 3. Unlock the Power of AI
+             ================================================================= */}
+          <section className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            {/* COLUMN 1: Featured Games (5 cols) */}
+            <div className="lg:col-span-5 rounded-2xl border border-[#1B3164] bg-[#0A1329] p-4 flex flex-col justify-between shadow-lg">
+              <div className="flex items-center justify-between mb-3">
+                <h3
+                  className="text-base font-bold text-white flex items-center gap-2"
+                  style={{ fontFamily: 'var(--font-display), sans-serif' }}
+                >
+                  <Trophy className="h-4 w-4 text-amber-400" />
+                  <span>Featured Games</span>
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => scrollToSection('#gaming-zone', 'gaming')}
+                  className="text-xs font-semibold text-[#00D2FF] hover:underline inline-flex items-center gap-1"
+                >
+                  <span>View All</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 flex-1">
+                {/* Main Featured Game Card (Battlegrounds Mobile India) */}
+                <div
+                  onClick={() => setActiveGame(BROWSER_GAMES[0])}
+                  className="sm:col-span-6 relative rounded-xl overflow-hidden border border-[#233E7D] group cursor-pointer min-h-[175px] flex flex-col justify-end p-3"
+                >
+                  <img
+                    src="/assets/fy/game-bgmi.png"
+                    alt="Battlegrounds Mobile India"
+                    className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#050B1A] via-[#050B1A]/30 to-transparent" />
+                  <div className="relative z-10 flex flex-col items-center text-center">
+                    <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#0099FF] to-[#0055FF] px-4 py-1.5 text-xs font-bold text-white shadow-[0_0_15px_rgba(0,153,255,0.65)]">
+                      <span>Play Now</span>
+                      <Play className="h-3 w-3 fill-white" />
+                    </span>
+                  </div>
+                </div>
+
+                {/* Right 3 Game Rows */}
+                <div className="sm:col-span-6 flex flex-col justify-between gap-2">
+                  {[
+                    {
+                      title: 'Free Fire',
+                      subtitle: 'Battle Royale',
+                      img: '/assets/fy/game-freefire.png',
+                      game: BROWSER_GAMES[0],
+                    },
+                    {
+                      title: 'Minecraft',
+                      subtitle: 'Build & Survive',
+                      img: '/assets/fy/game-minecraft.png',
+                      game: BROWSER_GAMES[1] || BROWSER_GAMES[0],
+                    },
+                    {
+                      title: 'GTA V',
+                      subtitle: 'Open World',
+                      img: '/assets/fy/game-gtav.png',
+                      game: BROWSER_GAMES[2] || BROWSER_GAMES[0],
+                    },
+                  ].map((item) => (
+                    <button
+                      key={item.title}
+                      type="button"
+                      onClick={() => setActiveGame(item.game)}
+                      className="w-full rounded-xl border border-[#192D5C] bg-[#0F1B38]/90 hover:bg-[#142449] hover:border-[#00D2FF]/50 p-2 flex items-center justify-between gap-2.5 transition-all text-left"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <img
+                          src={item.img}
+                          alt={item.title}
+                          className="h-10 w-10 rounded-lg object-cover border border-white/15 shrink-0"
+                        />
+                        <div className="min-w-0">
+                          <div className="text-xs font-bold text-white truncate">{item.title}</div>
+                          <div className="text-[11px] text-slate-400 truncate">{item.subtitle}</div>
+                        </div>
+                      </div>
+                      <span className="h-6 w-6 rounded-full bg-[#182952] flex items-center justify-center text-slate-300 shrink-0">
+                        <ChevronRight className="h-3.5 w-3.5" />
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* COLUMN 2: Trending AI Tools (3.5 -> 3 cols on 12-col grid) */}
+            <div className="lg:col-span-3 rounded-2xl border border-[#1B3164] bg-[#0A1329] p-4 flex flex-col justify-between shadow-lg">
+              <div className="flex items-center justify-between mb-3">
+                <h3
+                  className="text-base font-bold text-white flex items-center gap-1.5"
+                  style={{ fontFamily: 'var(--font-display), sans-serif' }}
+                >
+                  <Sparkles className="h-4 w-4 text-[#00D2FF]" />
+                  <span>Trending AI Tools</span>
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => scrollToSection('#ai-center', 'ai')}
+                  className="text-xs font-semibold text-[#00D2FF] hover:underline inline-flex items-center gap-1"
+                >
+                  <span>View All</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </button>
+              </div>
+
+              <div className="flex flex-col justify-between gap-2.5 flex-1">
+                {[
+                  {
+                    title: 'AI Image Generator',
+                    subtitle: 'Create Stunning Images',
+                    iconBg: 'bg-purple-500/20 text-purple-300 border-purple-400/30',
+                    icon: <ImageIcon className="h-4 w-4" />,
+                    module:
+                      YARA_AI_MODULES.find((m) => m.id === 'ai-image') || YARA_AI_MODULES[0],
+                  },
+                  {
+                    title: 'AI Chat Assistant',
+                    subtitle: 'Ask Anything',
+                    iconBg: 'bg-sky-500/20 text-[#00D2FF] border-sky-400/30',
+                    icon: <MessageSquare className="h-4 w-4" />,
+                    module:
+                      YARA_AI_MODULES.find((m) => m.id === 'ai-chat') || YARA_AI_MODULES[0],
+                  },
+                  {
+                    title: 'Text Summarizer',
+                    subtitle: 'Summarize Text',
+                    iconBg: 'bg-cyan-500/20 text-cyan-300 border-cyan-400/30',
+                    icon: <FileText className="h-4 w-4" />,
+                    module:
+                      YARA_AI_MODULES.find((m) => m.id === 'ai-summarizer') || YARA_AI_MODULES[0],
+                  },
+                ].map((ai) => (
+                  <button
+                    key={ai.title}
+                    type="button"
+                    onClick={() => setActiveAiModule(ai.module)}
+                    className="w-full rounded-xl border border-[#192D5C] bg-[#0F1B38]/90 hover:bg-[#142449] hover:border-[#00D2FF]/50 p-2.5 flex items-center justify-between gap-3 transition-all text-left"
                   >
-                    Explore Services
-                    <ArrowRight className="h-4 w-4" />
-                  </a>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div
+                        className={`h-9 w-9 rounded-xl border flex items-center justify-center shrink-0 ${ai.iconBg}`}
+                      >
+                        {ai.icon}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-xs font-bold text-white truncate">{ai.title}</div>
+                        <div className="text-[11px] text-slate-400 truncate">{ai.subtitle}</div>
+                      </div>
+                    </div>
+                    <span className="h-6 w-6 rounded-full bg-[#182952] flex items-center justify-center text-slate-300 shrink-0">
+                      <ChevronRight className="h-3.5 w-3.5" />
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* COLUMN 3: Unlock the Power of AI Banner (4 cols) */}
+            <div className="lg:col-span-4 relative rounded-2xl overflow-hidden border border-[#2B4696] bg-[#0B173D] p-5 flex items-center justify-between shadow-[0_0_30px_rgba(0,114,255,0.2)] min-h-[225px]">
+              {/* Right AI Robot Mascot Artwork */}
+              <img
+                src="/assets/fy/ai-robot.png"
+                alt="Yara AI Robot Assistant"
+                className="absolute right-0 bottom-0 h-full w-[45%] object-cover object-right pointer-events-none select-none"
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-[#0B173D] via-[#0E1C4A] via-60% to-transparent pointer-events-none" />
+
+              <div className="relative z-10 max-w-[64%] space-y-2.5">
+                <h3
+                  className="text-lg sm:text-[19px] font-extrabold text-white leading-tight whitespace-nowrap"
+                  style={{ fontFamily: 'var(--font-display), sans-serif' }}
+                >
+                  Unlock the Power of AI
+                </h3>
+                <p className="text-xs text-slate-200 leading-relaxed">
+                  Smarter Tools. Bigger Possibilities.
+                </p>
+                <div className="pt-2">
                   <button
                     type="button"
                     onClick={() => setActiveAiModule(YARA_AI_MODULES[0])}
-                    className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-xs font-semibold text-slate-800 hover:bg-slate-50 transition-colors whitespace-nowrap"
+                    className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#00D2FF] via-[#3A7BD5] to-[#9333EA] px-5 py-2.5 text-xs font-bold text-white shadow-[0_0_20px_rgba(0,210,255,0.5)] hover:opacity-95 transition-opacity"
                   >
-                    <Sparkles className="h-4 w-4 text-[#0284C7]" />
-                    Launch Yara AI Assistant
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleOpenTool(PLATFORM_TOOLS[5])}
-                    className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-[#F8FAFC] px-4 py-2.5 text-xs font-medium text-slate-700 hover:bg-slate-100 transition-colors whitespace-nowrap"
-                  >
-                    Try Word & Text Analyzer
-                  </button>
-                </div>
-              </div>
-
-              {/* Right Column: Subtle Professional SaaS Ecosystem Illustration */}
-              <div className="lg:col-span-5">
-                <div className="rounded-xl border border-slate-200/90 bg-white p-6 shadow-xs">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-5">
-                    <div>
-                      <div className="text-xs text-slate-500">Unified Platform Architecture</div>
-                      <div
-                        className="text-sm font-semibold text-slate-900 mt-0.5"
-                        style={{ fontFamily: 'var(--font-display), sans-serif' }}
-                      >
-                        Falylio Yara Workspace Hub
-                      </div>
-                    </div>
-                    <span className="text-xs text-[#0284C7] font-medium tabular-nums">12 Integrated Verticals</span>
-                  </div>
-
-                  {/* Clean SVG Architectural Diagram */}
-                  <svg
-                    viewBox="0 0 420 220"
-                    className="w-full h-auto rounded-lg bg-[#F8FAFC] border border-slate-200/60 p-3"
-                    role="img"
-                    aria-label="Falylio Yara Unified Digital Platform Ecosystem Illustration"
-                  >
-                    <line x1="0" y1="55" x2="420" y2="55" stroke="#E2E8F0" strokeDasharray="4 4" />
-                    <line x1="0" y1="110" x2="420" y2="110" stroke="#E2E8F0" strokeDasharray="4 4" />
-                    <line x1="0" y1="165" x2="420" y2="165" stroke="#E2E8F0" strokeDasharray="4 4" />
-
-                    <path d="M125 60 L210 110 L295 60" stroke="#93C5FD" strokeWidth="2" fill="none" />
-                    <path d="M125 160 L210 110 L295 160" stroke="#93C5FD" strokeWidth="2" fill="none" />
-
-                    <rect x="24" y="28" width="120" height="58" rx="8" fill="#FFFFFF" stroke="#CBD5E1" />
-                    <text x="38" y="52" fill="#0F172A" fontSize="11" fontWeight="600" fontFamily="sans-serif">
-                      17 Tool Categories
-                    </text>
-                    <text x="38" y="68" fill="#64748B" fontSize="9.5" fontFamily="sans-serif">
-                      PDF · JSON · Color · Math
-                    </text>
-
-                    <rect x="276" y="28" width="120" height="58" rx="8" fill="#FFFFFF" stroke="#CBD5E1" />
-                    <text x="290" y="52" fill="#0F172A" fontSize="11" fontWeight="600" fontFamily="sans-serif">
-                      Yara AI Center
-                    </text>
-                    <text x="290" y="68" fill="#64748B" fontSize="9.5" fontFamily="sans-serif">
-                      Write · Code · Translate
-                    </text>
-
-                    <rect x="24" y="134" width="120" height="58" rx="8" fill="#FFFFFF" stroke="#CBD5E1" />
-                    <text x="38" y="158" fill="#0F172A" fontSize="11" fontWeight="600" fontFamily="sans-serif">
-                      Education & MCQs
-                    </text>
-                    <text x="38" y="174" fill="#64748B" fontSize="9.5" fontFamily="sans-serif">
-                      6 Tracks · Live Quizzes
-                    </text>
-
-                    <rect x="276" y="134" width="120" height="58" rx="8" fill="#FFFFFF" stroke="#CBD5E1" />
-                    <text x="290" y="158" fill="#0F172A" fontSize="11" fontWeight="600" fontFamily="sans-serif">
-                      Digital Marketplace
-                    </text>
-                    <text x="290" y="174" fill="#64748B" fontSize="9.5" fontFamily="sans-serif">
-                      Templates · Stock Media
-                    </text>
-
-                    <circle cx="210" cy="110" r="34" fill="#0F172A" />
-                    <text x="210" y="107" textAnchor="middle" fill="#FFFFFF" fontSize="13" fontWeight="700" fontFamily="sans-serif">
-                      FY HUB
-                    </text>
-                    <text x="210" y="121" textAnchor="middle" fill="#38BDF8" fontSize="8.5" fontWeight="500" fontFamily="sans-serif">
-                      UNIFIED
-                    </text>
-                  </svg>
-
-                  {/* Quick Interactive Launchers */}
-                  <div className="mt-4 grid grid-cols-3 gap-2 pt-2 text-center">
-                    <button
-                      type="button"
-                      onClick={() => handleOpenTool(PLATFORM_TOOLS[7])}
-                      className="rounded-lg bg-[#F8FAFC] hover:bg-[#F0F7FF] p-2.5 text-left transition-colors"
-                    >
-                      <div className="text-xs font-semibold text-slate-900">JSON Validator</div>
-                      <div className="text-[11px] text-slate-500 mt-0.5">Developer Utility</div>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleOpenTool(PLATFORM_TOOLS[14])}
-                      className="rounded-lg bg-[#F8FAFC] hover:bg-[#F0F7FF] p-2.5 text-left transition-colors"
-                    >
-                      <div className="text-xs font-semibold text-slate-900">Invoice Builder</div>
-                      <div className="text-[11px] text-slate-500 mt-0.5">Business Suite</div>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setActiveCourseQuiz(EDUCATION_COURSES[1])}
-                      className="rounded-lg bg-[#F8FAFC] hover:bg-[#F0F7FF] p-2.5 text-left transition-colors"
-                    >
-                      <div className="text-xs font-semibold text-slate-900">TypeScript Quiz</div>
-                      <div className="text-[11px] text-slate-500 mt-0.5">Interactive MCQ</div>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* =====================================================================
-            C. POPULAR CATEGORIES
-           ===================================================================== */}
-        <section id="popular-categories" className="py-14 lg:py-16 border-b border-slate-200/80 bg-white">
-          <div className="mx-auto max-w-[1360px] px-4 sm:px-6 lg:px-8 space-y-8">
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-              <div>
-                <div className="text-xs font-medium text-[#0284C7]">01. Platform Ecosystem</div>
-                <h2
-                  className="mt-1 text-2xl sm:text-3xl font-bold text-slate-900"
-                  style={{ fontFamily: 'var(--font-display), sans-serif' }}
-                >
-                  Popular Categories
-                </h2>
-              </div>
-              <p className="text-sm text-slate-600 max-w-md">
-                Navigate directly to any core vertical. Every workspace shares a consistent, clutter-free interface.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-              {POPULAR_CATEGORIES.map((cat) => (
-                <a
-                  key={cat.id}
-                  href={cat.sectionAnchor}
-                  className="group flex flex-col justify-between rounded-xl border border-slate-200/90 bg-[#F8FAFC]/60 p-5 hover:border-[#0284C7] hover:bg-white transition-colors"
-                >
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#F0F7FF] text-[#0284C7]">
-                        {getIconComponent(cat.iconName, 'h-5 w-5 text-[#0284C7]')}
-                      </div>
-                      <span className="text-xs text-slate-500 tabular-nums">{cat.itemCount}</span>
-                    </div>
-                    <h3
-                      className="text-base font-semibold text-slate-900 group-hover:text-[#0284C7] transition-colors"
-                      style={{ fontFamily: 'var(--font-display), sans-serif' }}
-                    >
-                      {cat.title}
-                    </h3>
-                    <p className="text-xs text-slate-600 leading-relaxed">{cat.description}</p>
-                  </div>
-                  <div className="mt-4 pt-3 border-t border-slate-200/60 flex items-center justify-between text-xs font-medium text-slate-700 group-hover:text-[#0284C7]">
-                    <span>Explore Category</span>
+                    <span>Try Yara AI Now</span>
                     <ArrowRight className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* =================================================================
+              BOTTOM 2-COLUMN BENTO ROW:
+              1. Latest Apps [NEW] | 2. Popular Courses [HOT]
+             ================================================================= */}
+          <section className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            {/* LEFT: Latest Apps [NEW] */}
+            <div
+              id="apps-software"
+              className="lg:col-span-6 rounded-2xl border border-[#1B3164] bg-[#0A1329] p-4 space-y-3 shadow-lg"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="h-6 w-6 rounded-lg bg-sky-500/20 border border-sky-400/30 flex items-center justify-center text-[#00D2FF]">
+                    <AppWindow className="h-3.5 w-3.5" />
                   </div>
-                </a>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* =====================================================================
-            D. FEATURED TOOLS & ALL 17 CATEGORIES DIRECTORY
-           ===================================================================== */}
-        <section id="all-tools" className="py-14 lg:py-16 border-b border-slate-200/80 bg-[#F8FAFC]">
-          <div className="mx-auto max-w-[1360px] px-4 sm:px-6 lg:px-8 space-y-8">
-            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
-              <div>
-                <div className="text-xs font-medium text-[#0284C7]">02. Online Utilities Directory</div>
-                <h2
-                  className="mt-1 text-2xl sm:text-3xl font-bold text-slate-900"
-                  style={{ fontFamily: 'var(--font-display), sans-serif' }}
-                >
-                  Featured Tools & Complete 17-Category Directory
-                </h2>
-                <p className="mt-1 text-sm text-slate-600">
-                  Click any utility card below to open its interactive browser workbench.
-                </p>
-              </div>
-
-              {/* Interactive Segmented Filter Tabs */}
-              <div className="flex flex-wrap items-center gap-1 rounded-lg bg-slate-200/70 p-1 self-start">
-                {(
-                  [
-                    ['popular', 'Popular Tools'],
-                    ['recent', 'Recently Added'],
-                    ['recommended', 'Recommended'],
-                    ['free', 'Free Tools'],
-                    ['all', 'All Tools'],
-                  ] as const
-                ).map(([key, label]) => (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => setSelectedToolTab(key)}
-                    className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors whitespace-nowrap shrink-0 ${
-                      selectedToolTab === key
-                        ? 'bg-white text-slate-900 shadow-xs'
-                        : 'text-slate-600 hover:text-slate-900'
-                    }`}
+                  <h3
+                    className="text-base font-bold text-white"
+                    style={{ fontFamily: 'var(--font-display), sans-serif' }}
                   >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Category Selector & Tool Search Bar */}
-            <div className="space-y-4">
-              <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
-                <div className="relative flex-1 max-w-md">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                  <input
-                    type="search"
-                    aria-label="Filter tools by name or category"
-                    value={toolSearchQuery}
-                    onChange={(e) => setToolSearchQuery(e.target.value)}
-                    placeholder="Filter tools by keyword (e.g., PDF, JSON, Color, Password, Invoice)..."
-                    className="w-full rounded-lg border border-slate-300 bg-white pl-9 pr-3 py-2 text-xs text-slate-900 focus:border-[#0284C7] focus:outline-none"
-                  />
+                    Latest Apps
+                  </h3>
+                  <span className="rounded-md bg-emerald-500 px-2 py-0.5 text-[10px] font-extrabold uppercase text-white shadow-[0_0_10px_rgba(16,185,129,0.5)]">
+                    NEW
+                  </span>
                 </div>
-                <div className="text-xs text-slate-500 tabular-nums">
-                  Showing {filteredTools.length} of {PLATFORM_TOOLS.length} utilities across 17 categories
-                </div>
-              </div>
-
-              {/* All 17 Categories Interactive Filter Buttons */}
-              <div className="flex flex-wrap gap-1.5">
                 <button
                   type="button"
-                  onClick={() => {
-                    setSelectedToolCategory('All');
-                    setSelectedToolTab('all');
-                  }}
-                  className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors whitespace-nowrap ${
-                    selectedToolCategory === 'All'
-                      ? 'bg-[#0F172A] text-white'
-                      : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-100'
-                  }`}
+                  onClick={() => scrollToSection('#all-tools', 'tools')}
+                  className="text-xs font-semibold text-[#00D2FF] hover:underline inline-flex items-center gap-1"
                 >
-                  All 17 Categories
+                  <span>View All</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
                 </button>
-                {ALL_TOOL_CATEGORIES.map((category) => (
-                  <button
-                    key={category}
-                    type="button"
-                    onClick={() => {
-                      setSelectedToolCategory(category);
-                      setSelectedToolTab('all');
-                    }}
-                    className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors whitespace-nowrap ${
-                      selectedToolCategory === category
-                        ? 'bg-[#0284C7] text-white'
-                        : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-100'
-                    }`}
-                  >
-                    {category}
-                  </button>
-                ))}
               </div>
-            </div>
 
-            {/* Tools Grid */}
-            {filteredTools.length === 0 ? (
-              <div className="rounded-xl border border-slate-200 bg-white p-8 text-center space-y-3">
-                <p className="text-sm text-slate-600">No tools matched your current category and search filter.</p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedToolCategory('All');
-                    setSelectedToolTab('all');
-                    setToolSearchQuery('');
-                  }}
-                  className="rounded-lg bg-[#0F172A] px-4 py-2 text-xs font-medium text-white"
-                >
-                  Reset Tool Filters
-                </button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                {filteredTools.map((tool) => {
-                  const isFav = favoriteIds.includes(tool.id);
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {SOFTWARE_APPS.slice(0, 4).map((app, idx) => {
+                  const gradients = [
+                    'from-amber-500/30 via-orange-600/20 to-[#0F1B38] border-amber-400/35',
+                    'from-emerald-500/30 via-teal-600/20 to-[#0F1B38] border-emerald-400/35',
+                    'from-sky-500/30 via-blue-600/20 to-[#0F1B38] border-sky-400/35',
+                    'from-purple-500/30 via-indigo-600/20 to-[#0F1B38] border-purple-400/35',
+                  ];
                   return (
                     <div
-                      key={tool.id}
-                      className="flex flex-col justify-between rounded-xl border border-slate-200/90 bg-white p-5 hover:border-[#0284C7] transition-colors"
+                      key={app.id}
+                      onClick={() => handleOpenTool(PLATFORM_TOOLS[idx % PLATFORM_TOOLS.length])}
+                      className={`group cursor-pointer rounded-xl border bg-gradient-to-b ${
+                        gradients[idx % gradients.length]
+                      } p-3 flex flex-col justify-between hover:-translate-y-0.5 transition-all`}
                     >
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-2 text-xs text-slate-500">
-                            <span>{tool.category}</span>
-                            <span aria-hidden="true">·</span>
-                            <span className="tabular-nums">{tool.usageCount}</span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => handleToggleFavorite(tool.id)}
-                            aria-label={`${isFav ? 'Remove' : 'Save'} ${tool.name} to favorites`}
-                            className={`p-1.5 rounded-md border transition-colors ${
-                              isFav
-                                ? 'border-[#0284C7] bg-[#F0F9FF] text-[#0284C7]'
-                                : 'border-transparent text-slate-400 hover:text-slate-700'
-                            }`}
-                          >
-                            <Bookmark className="h-4 w-4" />
-                          </button>
-                        </div>
-
-                        <div className="flex items-start gap-3">
-                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#F0F7FF]">
-                            {getIconComponent(tool.iconName, 'h-5 w-5 text-[#0284C7]')}
-                          </div>
-                          <div>
-                            <h3
-                              className="text-base font-semibold text-slate-900"
-                              style={{ fontFamily: 'var(--font-display), sans-serif' }}
-                            >
-                              {tool.name}
-                            </h3>
-                            <p className="mt-1 text-xs text-slate-600 leading-relaxed">{tool.description}</p>
-                          </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-black/30 text-slate-200">
+                          {app.platform}
+                        </span>
+                        <span className="text-[11px] font-bold text-amber-300">★ {app.rating}</span>
+                      </div>
+                      <div className="my-3 flex items-center justify-center">
+                        <div className="h-12 w-12 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center text-white shadow-inner">
+                          <AppWindow className="h-6 w-6 text-[#00D2FF]" />
                         </div>
                       </div>
-
-                      <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between">
-                        <span className="text-xs text-slate-500">100% Free Browser Utility</span>
-                        <button
-                          type="button"
-                          onClick={() => handleOpenTool(tool)}
-                          className="inline-flex items-center gap-1.5 rounded-lg bg-[#0F172A] px-3.5 py-1.5 text-xs font-medium text-white hover:bg-slate-800 transition-colors whitespace-nowrap"
-                        >
-                          Open Tool
-                          <ArrowRight className="h-3.5 w-3.5" />
-                        </button>
+                      <div>
+                        <div className="text-xs font-bold text-white truncate">{app.name}</div>
+                        <div className="text-[10px] text-slate-300 truncate">{app.license}</div>
                       </div>
                     </div>
                   );
                 })}
               </div>
-            )}
-          </div>
-        </section>
-
-        {/* =====================================================================
-            E. YARA AI CENTER
-           ===================================================================== */}
-        <section id="ai-center" className="py-14 lg:py-16 border-b border-slate-200/80 bg-white">
-          <div className="mx-auto max-w-[1360px] px-4 sm:px-6 lg:px-8 space-y-8">
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-              <div>
-                <div className="text-xs font-medium text-[#0284C7]">03. Yara AI Center</div>
-                <h2
-                  className="mt-1 text-2xl sm:text-3xl font-bold text-slate-900"
-                  style={{ fontFamily: 'var(--font-display), sans-serif' }}
-                >
-                  Dedicated AI Assistants & Workspaces
-                </h2>
-              </div>
-              <p className="text-xs sm:text-sm text-slate-600 max-w-md">
-                Connected to our server-side `/api/ai` route with transparent API connection status verification.
-              </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            {/* RIGHT: Popular Courses [HOT] */}
+            <div className="lg:col-span-6 rounded-2xl border border-[#1B3164] bg-[#0A1329] p-4 space-y-3 shadow-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="h-6 w-6 rounded-lg bg-purple-500/20 border border-purple-400/30 flex items-center justify-center text-purple-300">
+                    <GraduationCap className="h-3.5 w-3.5" />
+                  </div>
+                  <h3
+                    className="text-base font-bold text-white"
+                    style={{ fontFamily: 'var(--font-display), sans-serif' }}
+                  >
+                    Popular Courses
+                  </h3>
+                  <span className="rounded-md bg-rose-500 px-2 py-0.5 text-[10px] font-extrabold uppercase text-white shadow-[0_0_10px_rgba(244,63,94,0.5)]">
+                    HOT
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => scrollToSection('#education', 'education')}
+                  className="text-xs font-semibold text-[#00D2FF] hover:underline inline-flex items-center gap-1"
+                >
+                  <span>View All</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {EDUCATION_COURSES.slice(0, 2).map((course, idx) => (
+                  <div
+                    key={course.id}
+                    onClick={() => setActiveCourseQuiz(course)}
+                    className="group cursor-pointer rounded-xl border border-[#213B75] bg-gradient-to-br from-[#102048] via-[#151D42] to-[#23154B] p-3.5 flex flex-col justify-between hover:border-[#00D2FF] transition-all"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="rounded-full bg-[#00D2FF]/20 border border-[#00D2FF]/40 px-2.5 py-0.5 text-[10px] font-bold text-[#00D2FF]">
+                        {course.track}
+                      </span>
+                      <span className="text-[11px] text-slate-300">{course.duration}</span>
+                    </div>
+                    <div className="my-2.5">
+                      <div className="text-xs sm:text-sm font-bold text-white group-hover:text-[#00D2FF] transition-colors line-clamp-1">
+                        {course.title}
+                      </div>
+                      <div className="text-[11px] text-slate-300 mt-0.5">
+                        {course.lessonsCount} Lessons • {course.level}
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between pt-2 border-t border-white/10">
+                      <span className="text-[11px] font-semibold text-amber-300">
+                        Interactive MCQ Quiz
+                      </span>
+                      <span className="inline-flex items-center gap-1 text-xs font-bold text-white group-hover:translate-x-0.5 transition-transform">
+                        <span>Start</span>
+                        <ArrowRight className="h-3 w-3 text-[#00D2FF]" />
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* =================================================================
+              ALL 17 TOOL CATEGORIES & SEARCHABLE TOOLS DIRECTORY (#all-tools)
+             ================================================================= */}
+          <section
+            id="all-tools"
+            className="rounded-2xl border border-[#1B3164] bg-[#0A1329] p-5 space-y-5 shadow-lg"
+          >
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#162852] pb-4">
+              <div>
+                <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#00D2FF]">
+                  <Wrench className="h-3.5 w-3.5" />
+                  <span>Complete 17-Category Utility Ecosystem</span>
+                </div>
+                <h2
+                  className="text-xl sm:text-2xl font-bold text-white mt-1"
+                  style={{ fontFamily: 'var(--font-display), sans-serif' }}
+                >
+                  All Online Tools Directory
+                </h2>
+              </div>
+
+              {/* Filter Tabs + Search Input */}
+              <div className="flex flex-wrap items-center gap-2">
+                {(['all', 'popular', 'recent', 'recommended', 'free'] as const).map((tab) => (
+                  <button
+                    key={tab}
+                    type="button"
+                    onClick={() => setSelectedToolTab(tab)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold capitalize transition-all ${
+                      selectedToolTab === tab
+                        ? 'bg-gradient-to-r from-[#00A8FF] to-[#0055FF] text-white shadow-[0_0_12px_rgba(0,168,255,0.4)]'
+                        : 'bg-[#101E3E] text-slate-300 hover:text-white border border-[#1E3468]'
+                    }`}
+                  >
+                    {tab}
+                  </button>
+                ))}
+                <div className="relative">
+                  <Search className="h-3.5 w-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="search"
+                    value={toolSearchQuery}
+                    onChange={(e) => setToolSearchQuery(e.target.value)}
+                    placeholder="Filter tools..."
+                    aria-label="Filter tools"
+                    className="h-8 rounded-xl bg-[#0D1834] border border-[#213B75] pl-8 pr-3 text-xs text-white placeholder:text-slate-400 focus:outline-none focus:border-[#00D2FF]"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 17 Tool Category Pills */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-2">
+              <button
+                type="button"
+                onClick={() => setSelectedToolCategory('All')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+                  selectedToolCategory === 'All'
+                    ? 'bg-[#00D2FF] text-[#050C1D] font-bold'
+                    : 'bg-[#0F1B38] text-slate-300 border border-[#1B3164] hover:border-[#00D2FF]/50'
+                }`}
+              >
+                All 17 Categories ({PLATFORM_TOOLS.length})
+              </button>
+              {ALL_TOOL_CATEGORIES.map((cat) => (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setSelectedToolCategory(cat)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+                    selectedToolCategory === cat
+                      ? 'bg-[#00D2FF] text-[#050C1D] font-bold'
+                      : 'bg-[#0F1B38] text-slate-300 border border-[#1B3164] hover:border-[#00D2FF]/50'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+
+            {/* Tools Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+              {filteredTools.map((tool) => {
+                const isFav = favoriteIds.includes(tool.id);
+                return (
+                  <div
+                    key={tool.id}
+                    className="rounded-xl border border-[#1B3164] bg-[#0E1936]/90 hover:border-[#00D2FF]/60 p-4 flex flex-col justify-between gap-3 transition-all group"
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="h-10 w-10 rounded-xl bg-[#14254E] border border-[#25448A] flex items-center justify-center text-[#00D2FF]">
+                          {getIconComponent(tool.iconName, 'h-5 w-5 text-[#00D2FF]')}
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="rounded-full bg-[#15264E] px-2.5 py-0.5 text-[10px] font-semibold text-sky-300">
+                            {tool.category}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleToggleFavorite(tool.id)}
+                            aria-label={`Bookmark ${tool.name}`}
+                            className={`p-1.5 rounded-lg border transition-colors ${
+                              isFav
+                                ? 'bg-amber-500/20 border-amber-400/50 text-amber-300'
+                                : 'bg-[#101E3E] border-[#1E3468] text-slate-400 hover:text-white'
+                            }`}
+                          >
+                            <Bookmark className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                      <h3 className="text-sm font-bold text-white group-hover:text-[#00D2FF] transition-colors">
+                        {tool.name}
+                      </h3>
+                      <p className="text-xs text-slate-300 line-clamp-2 leading-relaxed">
+                        {tool.description}
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleOpenTool(tool)}
+                      className="w-full rounded-xl bg-gradient-to-r from-[#0072FF] to-[#00B4FF] py-2 text-xs font-bold text-white shadow-[0_0_12px_rgba(0,114,255,0.35)] hover:opacity-95 transition-opacity flex items-center justify-center gap-1.5"
+                    >
+                      <span>Open Workbench</span>
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* =================================================================
+              YARA AI CENTER — ALL 10 AI MODULES (#ai-center)
+             ================================================================= */}
+          <section
+            id="ai-center"
+            className="rounded-2xl border border-[#243E82] bg-gradient-to-b from-[#0C1736] to-[#081026] p-5 space-y-4 shadow-lg"
+          >
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#192E61] pb-4">
+              <div>
+                <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#00D2FF]">
+                  <Bot className="h-4 w-4" />
+                  <span>Server-Side Gemini AI Workspace</span>
+                </div>
+                <h2
+                  className="text-xl sm:text-2xl font-bold text-white mt-0.5"
+                  style={{ fontFamily: 'var(--font-display), sans-serif' }}
+                >
+                  Yara AI Center — 10 Specialized Assistants
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveAiModule(YARA_AI_MODULES[0])}
+                className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#00D2FF] to-[#7C3AED] px-4 py-2 text-xs font-bold text-white shadow-[0_0_15px_rgba(0,210,255,0.4)]"
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                <span>Launch Yara AI Studio</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
               {YARA_AI_MODULES.map((mod) => (
                 <div
                   key={mod.id}
-                  className="flex flex-col justify-between rounded-xl border border-slate-200/90 bg-[#F0F7FF]/40 p-4 hover:border-[#0284C7] hover:bg-white transition-colors"
+                  onClick={() => setActiveAiModule(mod)}
+                  className="cursor-pointer rounded-xl border border-[#1F3873] bg-[#0F1D40]/90 hover:border-[#00D2FF] p-3.5 flex flex-col justify-between gap-3 transition-all group"
                 >
-                  <div className="space-y-2.5">
+                  <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white border border-slate-200/80">
-                        {getIconComponent(mod.iconName, 'h-4 w-4 text-[#0284C7]')}
+                      <div className="h-9 w-9 rounded-xl bg-[#162B5E] border border-[#00D2FF]/40 flex items-center justify-center text-[#00D2FF]">
+                        {getIconComponent(mod.iconName, 'h-4 w-4 text-[#00D2FF]')}
                       </div>
-                      <span className="text-[11px] text-slate-500">{mod.category}</span>
+                      <span className="rounded-full bg-purple-500/20 border border-purple-400/40 px-2 py-0.5 text-[10px] font-bold text-purple-200">
+                        {mod.category}
+                      </span>
                     </div>
-                    <h3
-                      className="text-sm font-semibold text-slate-900"
-                      style={{ fontFamily: 'var(--font-display), sans-serif' }}
-                    >
+                    <h3 className="text-xs sm:text-sm font-bold text-white group-hover:text-[#00D2FF]">
                       {mod.name}
                     </h3>
-                    <p className="text-xs text-slate-600 leading-relaxed">{mod.description}</p>
+                    <p className="text-[11px] text-slate-300 line-clamp-2">{mod.description}</p>
                   </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setActiveAiModule(mod)}
-                    className="mt-4 w-full rounded-lg border border-slate-300 bg-white py-2 text-xs font-semibold text-slate-900 hover:border-[#0F172A] hover:bg-[#0F172A] hover:text-white transition-colors whitespace-nowrap"
-                  >
-                    Launch Assistant
-                  </button>
+                  <div className="flex items-center justify-between text-[11px] font-bold text-[#00D2FF] pt-1">
+                    <span>Open Studio</span>
+                    <ChevronRight className="h-3.5 w-3.5" />
+                  </div>
                 </div>
               ))}
             </div>
-          </div>
-        </section>
+          </section>
 
-        {/* =====================================================================
-            H. MARKETPLACE
-           ===================================================================== */}
-        <section id="marketplace" className="py-14 lg:py-16 border-b border-slate-200/80 bg-[#F8FAFC]">
-          <div className="mx-auto max-w-[1360px] px-4 sm:px-6 lg:px-8 space-y-8">
-            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
+          {/* =================================================================
+              GAMING ZONE & BROWSER GAMES (#gaming-zone)
+             ================================================================= */}
+          <section
+            id="gaming-zone"
+            className="rounded-2xl border border-[#1B3164] bg-[#0A1329] p-5 space-y-4 shadow-lg"
+          >
+            <div className="flex items-center justify-between border-b border-[#162852] pb-3">
               <div>
-                <div className="text-xs font-medium text-[#0284C7]">04. Digital Marketplace</div>
+                <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-purple-400">
+                  <Gamepad2 className="h-4 w-4" />
+                  <span>Instant Play &amp; Esports Hub</span>
+                </div>
                 <h2
-                  className="mt-1 text-2xl sm:text-3xl font-bold text-slate-900"
+                  className="text-xl font-bold text-white mt-0.5"
                   style={{ fontFamily: 'var(--font-display), sans-serif' }}
                 >
-                  Templates, Graphics, E-Books, Software & Creator Services
+                  Gaming Zone
                 </h2>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-1 rounded-lg bg-slate-200/70 p-1">
-                {['All', 'Templates', 'Graphics', 'E-books', 'Software', 'Creator Services'].map((cat) => (
-                  <button
-                    key={cat}
-                    type="button"
-                    onClick={() => setMarketplaceFilter(cat)}
-                    className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors whitespace-nowrap ${
-                      marketplaceFilter === cat
-                        ? 'bg-white text-slate-900 shadow-xs'
-                        : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
               </div>
             </div>
 
-            {selectedProductNotice && (
-              <div className="flex items-center justify-between rounded-xl border border-sky-200 bg-[#F0F9FF] px-4 py-3 text-xs text-slate-800">
-                <span>{selectedProductNotice}</span>
-                <button
-                  type="button"
-                  onClick={() => setSelectedProductNotice(null)}
-                  className="font-semibold text-[#0284C7] hover:underline ml-4"
-                >
-                  Dismiss
-                </button>
-              </div>
-            )}
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {MARKETPLACE_PRODUCTS.filter(
-                (p) => marketplaceFilter === 'All' || p.category === marketplaceFilter
-              ).map((product) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+              {BROWSER_GAMES.map((game) => (
                 <div
-                  key={product.id}
-                  className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-5"
+                  key={game.id}
+                  className="rounded-xl border border-[#223A74] bg-[#0F1B38] p-4 flex flex-col justify-between gap-3 hover:border-purple-400 transition-all"
                 >
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between text-xs text-slate-500">
-                      <span>
-                        {product.category} · By {product.seller}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="rounded-full bg-purple-500/20 border border-purple-400/40 px-2.5 py-0.5 font-bold text-purple-300">
+                        {game.category}
                       </span>
-                      <span className="tabular-nums font-medium text-slate-700">
-                        ★ {product.rating} ({product.reviewsCount})
-                      </span>
+                      <span className="text-slate-400">{game.playersCount}</span>
                     </div>
-                    <h3
-                      className="text-base font-semibold text-slate-900"
-                      style={{ fontFamily: 'var(--font-display), sans-serif' }}
-                    >
-                      {product.title}
-                    </h3>
-                    <p className="text-xs text-slate-600 leading-relaxed">{product.description}</p>
-                    <div className="pt-1 text-xs text-slate-500">
-                      Deliverables: {product.deliverables.join(' · ')}
-                    </div>
+                    <h3 className="text-sm font-bold text-white">{game.title}</h3>
+                    <p className="text-xs text-slate-300">{game.description}</p>
                   </div>
-
-                  <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between">
-                    <span className="text-lg font-bold text-slate-900 tabular-nums">${product.price}</span>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setSelectedProductNotice(
-                          `Selected "${product.title}" ($${product.price}). Live payment checkout activates once merchant payment credentials & Supabase order tables are connected in Phase 6.`
-                        )
-                      }
-                      className="rounded-lg bg-[#0F172A] px-3.5 py-2 text-xs font-medium text-white hover:bg-slate-800 transition-colors whitespace-nowrap"
-                    >
-                      Inspect Product & License
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* =====================================================================
-            I. EDUCATION & COURSES (With Interactive MCQ Quiz System)
-           ===================================================================== */}
-        <section id="education" className="py-14 lg:py-16 border-b border-slate-200/80 bg-white">
-          <div className="mx-auto max-w-[1360px] px-4 sm:px-6 lg:px-8 space-y-8">
-            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
-              <div>
-                <div className="text-xs font-medium text-[#0284C7]">05. Education & Structured Learning</div>
-                <h2
-                  className="mt-1 text-2xl sm:text-3xl font-bold text-slate-900"
-                  style={{ fontFamily: 'var(--font-display), sans-serif' }}
-                >
-                  Featured Courses, Learning Tracks & Interactive MCQs
-                </h2>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-1 rounded-lg bg-slate-100 p-1">
-                {[
-                  'All',
-                  'Computer Learning',
-                  'Programming',
-                  'AI Learning',
-                  'Graphic Design',
-                  'Language Learning',
-                  'Islamic Studies',
-                ].map((track) => (
                   <button
-                    key={track}
                     type="button"
-                    onClick={() => setCourseFilter(track)}
-                    className={`rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors whitespace-nowrap ${
-                      courseFilter === track
-                        ? 'bg-white text-slate-900 shadow-xs'
-                        : 'text-slate-600 hover:text-slate-900'
-                    }`}
+                    onClick={() => setActiveGame(game)}
+                    className="w-full rounded-xl bg-gradient-to-r from-purple-600 to-[#0072FF] py-2 text-xs font-bold text-white flex items-center justify-center gap-1.5 hover:opacity-95"
                   >
-                    {track}
+                    <Play className="h-3.5 w-3.5 fill-white" />
+                    <span>Play in Browser</span>
                   </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {EDUCATION_COURSES.filter((c) => courseFilter === 'All' || c.track === courseFilter).map((course) => (
-                <div
-                  key={course.id}
-                  className="flex flex-col justify-between rounded-xl border border-slate-200 bg-[#F8FAFC]/70 p-5 hover:bg-white hover:border-[#0284C7] transition-colors"
-                >
-                  <div className="space-y-2.5">
-                    <div className="flex items-center gap-2 text-xs text-slate-500">
-                      <span>{course.track}</span>
-                      <span aria-hidden="true">·</span>
-                      <span>{course.level}</span>
-                      <span aria-hidden="true">·</span>
-                      <span className="tabular-nums">{course.duration}</span>
-                    </div>
-                    <h3
-                      className="text-base font-semibold text-slate-900"
-                      style={{ fontFamily: 'var(--font-display), sans-serif' }}
-                    >
-                      {course.title}
-                    </h3>
-                    <p className="text-xs text-slate-600 leading-relaxed">{course.description}</p>
-                    <p className="text-xs text-slate-500 pt-1 tabular-nums">
-                      Instructor: {course.instructor} · {course.lessonsCount} Structured Lessons
-                    </p>
-                  </div>
-
-                  <div className="mt-5 pt-3 border-t border-slate-200/70 flex items-center justify-between">
-                    <span className="text-xs font-medium text-[#0284C7] tabular-nums">
-                      {course.quizQuestions.length} Practice MCQs Ready
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setActiveCourseQuiz(course)}
-                      className="rounded-lg bg-[#0F172A] px-3.5 py-1.5 text-xs font-medium text-white hover:bg-slate-800 whitespace-nowrap"
-                    >
-                      Start Lesson & MCQ Quiz
-                    </button>
-                  </div>
                 </div>
               ))}
             </div>
-          </div>
-        </section>
+          </section>
 
-        {/* =====================================================================
-            G. APPS & SOFTWARE + F. GAMING ZONE (Balanced Side-by-Side Split)
-           ===================================================================== */}
-        <section id="apps-software" className="py-14 lg:py-16 border-b border-slate-200/80 bg-[#F8FAFC]">
-          <div className="mx-auto max-w-[1360px] px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              {/* Left 7 Columns: Apps & Software Directory */}
-              <div className="lg:col-span-7 space-y-5">
+          {/* =================================================================
+              DIGITAL MARKETPLACE (#marketplace) & EDUCATION (#education)
+             ================================================================= */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            {/* Digital Marketplace (6 cols) */}
+            <section
+              id="marketplace"
+              className="lg:col-span-6 rounded-2xl border border-[#1B3164] bg-[#0A1329] p-5 space-y-4 shadow-lg"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#162852] pb-3">
                 <div>
-                  <div className="text-xs font-medium text-[#0284C7]">06. Verified Software Directory</div>
+                  <div className="text-xs font-bold uppercase tracking-wider text-pink-400 flex items-center gap-1.5">
+                    <ShoppingCart className="h-3.5 w-3.5" />
+                    <span>Templates, E-Books &amp; Assets</span>
+                  </div>
                   <h2
-                    className="mt-1 text-2xl font-bold text-slate-900"
+                    className="text-lg font-bold text-white"
                     style={{ fontFamily: 'var(--font-display), sans-serif' }}
                   >
-                    Apps, Desktop Utilities & Open-Source Releases
-                  </h2>
-                  <p className="mt-1 text-xs text-slate-600">
-                    Android Applications, Windows Software, Open-source packages, and Browser Extensions.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {SOFTWARE_APPS.map((app) => (
-                    <div
-                      key={app.id}
-                      className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-4"
-                    >
-                      <div className="space-y-2">
-                        <div className="text-xs text-slate-500 tabular-nums">
-                          {app.platform} · {app.size}
-                        </div>
-                        <h3 className="text-sm font-semibold text-slate-900">{app.name}</h3>
-                        <p className="text-xs text-slate-600 leading-relaxed">{app.description}</p>
-                      </div>
-                      <div className="mt-4 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs">
-                        <span className="text-slate-500 tabular-nums">{app.version} · ★ {app.rating}</span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setAccountModalTab('architecture');
-                            setAccountModalOpen(true);
-                          }}
-                          className="font-semibold text-[#0284C7] hover:underline"
-                        >
-                          Specs & APK Info
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Right 5 Columns: Calm, Balanced Gaming Zone (Cognitive & Browser Puzzles) */}
-              <div id="gaming-zone" className="lg:col-span-5 space-y-5">
-                <div>
-                  <div className="text-xs font-medium text-[#0284C7]">07. Mindful Break & Logic Zone</div>
-                  <h2
-                    className="mt-1 text-2xl font-bold text-slate-900"
-                    style={{ fontFamily: 'var(--font-display), sans-serif' }}
-                  >
-                    Browser Logic, Word & Casual Puzzles
-                  </h2>
-                  <p className="mt-1 text-xs text-slate-600">
-                    Lightweight, distraction-free browser puzzles and cognitive games playable directly in your browser.
-                  </p>
-                </div>
-
-                <div className="space-y-3">
-                  {BROWSER_GAMES.map((game) => (
-                    <div
-                      key={game.id}
-                      className="flex items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white p-4 hover:border-[#0284C7] transition-colors"
-                    >
-                      <div className="space-y-1">
-                        <div className="text-xs text-slate-500">
-                          {game.category} · {game.difficulty}
-                        </div>
-                        <h3 className="text-sm font-semibold text-slate-900">{game.title}</h3>
-                        <p className="text-xs text-slate-600">{game.description}</p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setActiveGame(game)}
-                        className="rounded-lg bg-[#0F172A] px-3.5 py-2 text-xs font-medium text-white hover:bg-slate-800 whitespace-nowrap shrink-0"
-                      >
-                        Play in Browser
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* =====================================================================
-            J. STOCK MEDIA LIBRARY
-           ===================================================================== */}
-        <section id="stock-media" className="py-14 lg:py-16 border-b border-slate-200/80 bg-white">
-          <div className="mx-auto max-w-[1360px] px-4 sm:px-6 lg:px-8 space-y-8">
-            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
-              <div>
-                <div className="text-xs font-medium text-[#0284C7]">08. Royalty-Free Stock Media</div>
-                <h2
-                  className="mt-1 text-2xl sm:text-3xl font-bold text-slate-900"
-                  style={{ fontFamily: 'var(--font-display), sans-serif' }}
-                >
-                  Photos, Vectors, Illustrations, Icons, Video, Audio & Fonts
-                </h2>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-1 rounded-lg bg-slate-100 p-1">
-                {['All', 'Photos', 'Vectors', 'Illustrations', 'Wallpapers', 'Icons', 'Videos', 'Sound Effects', 'Fonts'].map(
-                  (type) => (
-                    <button
-                      key={type}
-                      type="button"
-                      onClick={() => setMediaFilter(type)}
-                      className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors whitespace-nowrap ${
-                        mediaFilter === type
-                          ? 'bg-white text-slate-900 shadow-xs'
-                          : 'text-slate-600 hover:text-slate-900'
-                      }`}
-                    >
-                      {type}
-                    </button>
-                  )
-                )}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {STOCK_MEDIA_ITEMS.filter((m) => mediaFilter === 'All' || m.type === mediaFilter).map((media) => (
-                <div
-                  key={media.id}
-                  className="flex flex-col justify-between rounded-xl border border-slate-200 bg-[#F8FAFC] p-4"
-                >
-                  <div>
-                    <div
-                      className="h-24 w-full rounded-lg border border-slate-200/60 flex items-end justify-between p-3"
-                      style={{
-                        background: `linear-gradient(135deg, ${media.palette[0]} 0%, ${media.palette[1]} 100%)`,
-                      }}
-                    >
-                      <span className="text-[11px] font-medium text-white/90">{media.type}</span>
-                      <div className="flex gap-1">
-                        {media.palette.map((hex) => (
-                          <span
-                            key={hex}
-                            className="h-3.5 w-3.5 rounded-full border border-white/50"
-                            style={{ backgroundColor: hex }}
-                            title={hex}
-                          />
-                        ))}
-                      </div>
-                    </div>
-
-                    <h3 className="mt-3 text-sm font-semibold text-slate-900">{media.title}</h3>
-                    <p className="mt-1 text-xs text-slate-500 tabular-nums">
-                      {media.resolutionOrFormat} · By {media.author}
-                    </p>
-                  </div>
-
-                  <div className="mt-4 pt-2.5 border-t border-slate-200/70 flex items-center justify-between text-xs">
-                    <span className="text-slate-500">{media.license}</span>
-                    <button
-                      type="button"
-                      onClick={() => handleOpenTool(PLATFORM_TOOLS[12])}
-                      className="font-semibold text-[#0284C7] hover:underline"
-                    >
-                      Inspect Palette
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* =====================================================================
-            K. SOCIAL MEDIA STUDIO + L. WEBSITE & APP BUILDER + M. BUSINESS & PRODUCTIVITY
-           ===================================================================== */}
-        <section id="social-studio" className="py-14 lg:py-16 border-b border-slate-200/80 bg-[#F8FAFC]">
-          <div className="mx-auto max-w-[1360px] px-4 sm:px-6 lg:px-8 space-y-12">
-            {/* Row 1: Social Media Studio & Website Builder */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* K. Social Media Studio */}
-              <div className="rounded-xl border border-slate-200 bg-white p-6 space-y-4">
-                <div>
-                  <div className="text-xs font-medium text-[#0284C7]">09. Social Media Studio</div>
-                  <h2
-                    className="mt-1 text-xl font-bold text-slate-900"
-                    style={{ fontFamily: 'var(--font-display), sans-serif' }}
-                  >
-                    Content Creation & Editorial Planning Tools
-                  </h2>
-                  <p className="mt-1 text-xs text-slate-600">
-                    Generate captions, hashtag sets, channel bios, and thumbnail aspect-ratio layouts.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                  {[
-                    'Thumbnail Maker',
-                    'Post Designer',
-                    'Caption Generator',
-                    'Hashtag Generator',
-                    'Bio Generator',
-                    'Content Planner',
-                  ].map((studioTool) => (
-                    <button
-                      key={studioTool}
-                      type="button"
-                      onClick={() =>
-                        handleOpenTool({
-                          id: `social-${studioTool}`,
-                          name: `Social Studio: ${studioTool}`,
-                          slug: 'social-generator',
-                          category: 'Writing Tools',
-                          description: `Interactive ${studioTool} workspace for clean social publishing.`,
-                          iconName: 'Share2',
-                          tags: ['popular', 'free'],
-                          workbenchMode: 'social-generator',
-                          usageCount: '9.1k monthly uses',
-                        })
-                      }
-                      className="rounded-lg border border-slate-200 bg-[#F8FAFC] p-3 text-left hover:border-[#0284C7] hover:bg-[#F0F7FF] transition-colors"
-                    >
-                      <div className="text-xs font-semibold text-slate-900">{studioTool}</div>
-                      <div className="mt-0.5 text-[11px] text-[#0284C7]">Open Studio →</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* L. Website & App Builder */}
-              <div id="web-builder" className="rounded-xl border border-slate-200 bg-white p-6 space-y-4">
-                <div>
-                  <div className="text-xs font-medium text-[#0284C7]">10. Website & App Builder</div>
-                  <h2
-                    className="mt-1 text-xl font-bold text-slate-900"
-                    style={{ fontFamily: 'var(--font-display), sans-serif' }}
-                  >
-                    Templates, Portfolio Builder & Live HTML Preview
-                  </h2>
-                  <p className="mt-1 text-xs text-slate-600">
-                    Test HTML5 snippets in real time, inspect responsive landing page blocks, and generate SEO meta tags.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                  {[
-                    'Website Templates',
-                    'Landing Page Resources',
-                    'Portfolio Builder',
-                    'Live HTML Preview',
-                    'Web Dev Tools',
-                    'Capacitor APK Guide',
-                  ].map((builderItem) => (
-                    <button
-                      key={builderItem}
-                      type="button"
-                      onClick={() => handleOpenTool(PLATFORM_TOOLS[8])}
-                      className="rounded-lg border border-slate-200 bg-[#F8FAFC] p-3 text-left hover:border-[#0284C7] hover:bg-[#F0F7FF] transition-colors"
-                    >
-                      <div className="text-xs font-semibold text-slate-900">{builderItem}</div>
-                      <div className="mt-0.5 text-[11px] text-[#0284C7]">Launch Sandbox →</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Row 2: M. Business & Productivity Suite (with Live Interactive Task Planner & Invoice Launcher) */}
-            <div id="business-productivity" className="rounded-xl border border-slate-200 bg-white p-6">
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-                <div className="lg:col-span-7 space-y-4">
-                  <div>
-                    <div className="text-xs font-medium text-[#0284C7]">11. Business & Productivity Suite</div>
-                    <h2
-                      className="mt-1 text-2xl font-bold text-slate-900"
-                      style={{ fontFamily: 'var(--font-display), sans-serif' }}
-                    >
-                      CV Maker, Invoice Generator, Financial Calculators & Task Planner
-                    </h2>
-                    <p className="mt-1 text-xs text-slate-600">
-                      Practical office tools designed for freelancers, students, and growing teams.
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {[
-                      { label: 'Invoice & Tax Generator', toolIdx: 14 },
-                      { label: 'CV & Resume Structure', toolIdx: 4 },
-                      { label: 'Compound & ROI Calculator', toolIdx: 10 },
-                      { label: 'Project Date Estimator', toolIdx: 15 },
-                      { label: 'Brand Color Token Kit', toolIdx: 12 },
-                      { label: 'AI Business Strategist', isAi: true },
-                    ].map((bItem) => (
-                      <button
-                        key={bItem.label}
-                        type="button"
-                        onClick={() => {
-                          if (bItem.isAi) {
-                            setActiveAiModule(YARA_AI_MODULES[6]);
-                          } else {
-                            handleOpenTool(PLATFORM_TOOLS[bItem.toolIdx!]);
-                          }
-                        }}
-                        className="rounded-lg border border-slate-200 bg-[#F8FAFC] p-3.5 text-left hover:border-[#0284C7] transition-colors"
-                      >
-                        <div className="text-xs font-semibold text-slate-900">{bItem.label}</div>
-                        <div className="mt-1 text-[11px] text-slate-500">Launch Tool →</div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Live Interactive Task Planner Widget */}
-                <div className="lg:col-span-5 rounded-lg border border-slate-200 bg-[#F8FAFC] p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-slate-900">Quick Workspace Task Planner</h3>
-                    <span className="text-xs text-slate-500 tabular-nums">
-                      {tasks.filter((t) => t.done).length}/{tasks.length} Completed
-                    </span>
-                  </div>
-
-                  <form onSubmit={handleAddTask} className="flex gap-2">
-                    <input
-                      type="text"
-                      aria-label="New workspace task"
-                      value={newTaskText}
-                      onChange={(e) => setNewTaskText(e.target.value)}
-                      placeholder="Add a milestone or daily task..."
-                      className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-900 focus:border-[#0284C7] focus:outline-none"
-                    />
-                    <button
-                      type="submit"
-                      className="rounded-lg bg-[#0F172A] px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-800 whitespace-nowrap"
-                    >
-                      Add Task
-                    </button>
-                  </form>
-
-                  <div className="space-y-1.5 max-h-40 overflow-y-auto">
-                    {tasks.map((task) => (
-                      <label
-                        key={task.id}
-                        className="flex items-center gap-2.5 rounded-md bg-white px-3 py-2 text-xs text-slate-800 border border-slate-200/70 cursor-pointer"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={task.done}
-                          onChange={() =>
-                            setTasks(tasks.map((t) => (t.id === task.id ? { ...t, done: !t.done } : t)))
-                          }
-                          className="rounded border-slate-300 text-[#0284C7]"
-                        />
-                        <span className={task.done ? 'line-through text-slate-400' : 'text-slate-800'}>
-                          {task.text}
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* =====================================================================
-            N. ENTERTAINMENT & MEDIA + O. NEWS & COMMUNITY
-           ===================================================================== */}
-        <section id="community-news" className="py-14 lg:py-16 border-b border-slate-200/80 bg-white">
-          <div className="mx-auto max-w-[1360px] px-4 sm:px-6 lg:px-8 space-y-12">
-            {/* N. Entertainment & Educational Media */}
-            <div className="space-y-5">
-              <div>
-                <div className="text-xs font-medium text-[#0284C7]">12. Mindful Entertainment & Cultural Media</div>
-                <h2
-                  className="mt-1 text-2xl font-bold text-slate-900"
-                  style={{ fontFamily: 'var(--font-display), sans-serif' }}
-                >
-                  Educational Videos, Documentaries, Short Films & Multilingual Podcasts
-                </h2>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[
-                  {
-                    title: 'The Architecture of Submarine Fiber Optic Cables',
-                    type: 'Documentary · 28 mins',
-                    lang: 'English / Arabic Subtitles',
-                    desc: 'How transoceanic optical networks carry 99% of global internet traffic across the seabed.',
-                  },
-                  {
-                    title: 'Golden Age of Optics: From Ibn al-Haytham to Modern Lenses',
-                    type: 'Educational Video · 19 mins',
-                    lang: 'Multilingual Subtitles (EN · AR · UR)',
-                    desc: 'Tracing the experimental method and camera obscura discoveries that shaped modern physics.',
-                  },
-                  {
-                    title: 'Calm Engineering Podcast: Designing Software That Lasts',
-                    type: 'Audio Podcast · Ep. 42 · 36 mins',
-                    lang: 'Full Transcript & SRT Included',
-                    desc: 'Conversations with principal engineers on simplicity, testing, and sustainable software.',
-                  },
-                ].map((item) => (
-                  <div
-                    key={item.title}
-                    className="flex flex-col justify-between rounded-xl border border-slate-200 bg-[#F8FAFC] p-5"
-                  >
-                    <div className="space-y-2">
-                      <div className="text-xs text-slate-500">
-                        {item.type} · {item.lang}
-                      </div>
-                      <h3 className="text-sm font-semibold text-slate-900">{item.title}</h3>
-                      <p className="text-xs text-slate-600 leading-relaxed">{item.desc}</p>
-                    </div>
-                    <div className="mt-4 pt-3 border-t border-slate-200/70 flex items-center justify-between text-xs">
-                      <span className="text-slate-500">Curated Stream & SRT</span>
-                      <button
-                        type="button"
-                        onClick={() => setActiveAiModule(YARA_AI_MODULES[9])}
-                        className="font-semibold text-[#0284C7] hover:underline"
-                      >
-                        Inspect Transcript & Subtitles
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* O. News & Community */}
-            <div className="space-y-5 pt-4 border-t border-slate-200">
-              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-                <div>
-                  <div className="text-xs font-medium text-[#0284C7]">13. News, Tutorials & Community Forum</div>
-                  <h2
-                    className="mt-1 text-2xl font-bold text-slate-900"
-                    style={{ fontFamily: 'var(--font-display), sans-serif' }}
-                  >
-                    Technology News, AI Updates, Tutorials & Q&A Discussions
+                    Digital Marketplace
                   </h2>
                 </div>
-
-                <div className="flex flex-wrap gap-1 rounded-lg bg-slate-100 p-1">
-                  {['All', 'Technology News', 'AI News', 'Tutorials', 'App Reviews'].map((cat) => (
+                <div className="flex flex-wrap gap-1.5">
+                  {['All', 'Templates', 'Graphics', 'E-books', 'Software'].map((cat) => (
                     <button
                       key={cat}
                       type="button"
-                      onClick={() => setCommunityFilter(cat)}
-                      className={`rounded-md px-3 py-1 text-xs font-medium transition-colors whitespace-nowrap ${
-                        communityFilter === cat
-                          ? 'bg-white text-slate-900 shadow-xs'
-                          : 'text-slate-600 hover:text-slate-900'
+                      onClick={() => setMarketplaceFilter(cat)}
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold ${
+                        marketplaceFilter === cat
+                          ? 'bg-pink-500 text-white'
+                          : 'bg-[#101E3E] text-slate-300'
                       }`}
                     >
                       {cat}
@@ -1586,243 +1532,496 @@ export default function FalylioYaraPlatform() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {COMMUNITY_POSTS.filter((p) => communityFilter === 'All' || p.category === communityFilter).map(
-                  (post) => (
-                    <article
-                      key={post.id}
-                      className="rounded-xl border border-slate-200 bg-white p-5 space-y-2.5"
+              {selectedProductNotice && (
+                <div className="rounded-xl border border-emerald-500/40 bg-emerald-950/50 p-3 text-xs text-emerald-200 flex items-center justify-between">
+                  <span>{selectedProductNotice}</span>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedProductNotice(null)}
+                    className="text-emerald-300 underline ml-2"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {MARKETPLACE_PRODUCTS.filter(
+                  (p) => marketplaceFilter === 'All' || p.category === marketplaceFilter
+                ).map((product) => (
+                  <div
+                    key={product.id}
+                    className="rounded-xl border border-[#1E3468] bg-[#0E1936] p-3.5 flex flex-col justify-between gap-3"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="text-pink-300 font-semibold">{product.category}</span>
+                        <span className="font-bold text-emerald-400">${product.price}</span>
+                      </div>
+                      <h3 className="text-xs sm:text-sm font-bold text-white mt-1">
+                        {product.title}
+                      </h3>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        By {product.seller} • ★ {product.rating}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSelectedProductNotice(
+                          `Added "${product.title}" ($${product.price}) to your Falylio Yara workspace queue.`
+                        )
+                      }
+                      className="w-full rounded-lg bg-[#162954] hover:bg-[#0072FF] border border-[#26468C] py-1.5 text-xs font-bold text-white transition-colors"
                     >
-                      <div className="flex items-center gap-2 text-xs text-slate-500">
-                        <span>{post.category}</span>
-                        <span aria-hidden="true">·</span>
-                        <span>{post.publishedAt}</span>
-                        <span aria-hidden="true">·</span>
-                        <span>{post.readTime}</span>
+                      Get Digital Asset
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* Education & Courses with MCQ Quizzes (6 cols) */}
+            <section
+              id="education"
+              className="lg:col-span-6 rounded-2xl border border-[#1B3164] bg-[#0A1329] p-5 space-y-4 shadow-lg"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#162852] pb-3">
+                <div>
+                  <div className="text-xs font-bold uppercase tracking-wider text-teal-400 flex items-center gap-1.5">
+                    <GraduationCap className="h-3.5 w-3.5" />
+                    <span>Interactive Academy &amp; MCQ Quizzes</span>
+                  </div>
+                  <h2
+                    className="text-lg font-bold text-white"
+                    style={{ fontFamily: 'var(--font-display), sans-serif' }}
+                  >
+                    Education &amp; Courses
+                  </h2>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {['All', 'Programming', 'AI Learning', 'Graphic Design', 'Islamic Studies'].map(
+                    (cat) => (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => setCourseFilter(cat)}
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold ${
+                          courseFilter === cat
+                            ? 'bg-teal-500 text-slate-950 font-bold'
+                            : 'bg-[#101E3E] text-slate-300'
+                        }`}
+                      >
+                        {cat}
+                      </button>
+                    )
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {EDUCATION_COURSES.filter(
+                  (c) => courseFilter === 'All' || c.track === courseFilter
+                ).map((course) => (
+                  <div
+                    key={course.id}
+                    className="rounded-xl border border-[#1E3468] bg-[#0E1936] p-3.5 flex flex-col justify-between gap-3"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between text-[10px]">
+                        <span className="text-teal-300 font-bold">{course.track}</span>
+                        <span className="text-slate-400">{course.level}</span>
                       </div>
-                      <h3 className="text-base font-semibold text-slate-900">{post.title}</h3>
-                      <p className="text-xs text-slate-600 leading-relaxed">{post.summary}</p>
-                      <div className="pt-2 flex items-center justify-between text-xs text-slate-500">
-                        <span>By {post.author}</span>
-                        <span className="tabular-nums">{post.repliesCount} Community Replies</span>
+                      <h3 className="text-xs sm:text-sm font-bold text-white mt-1">
+                        {course.title}
+                      </h3>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        {course.lessonsCount} Lessons • {course.duration}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setActiveCourseQuiz(course)}
+                      className="w-full rounded-lg bg-gradient-to-r from-teal-500 to-[#0072FF] py-1.5 text-xs font-bold text-white"
+                    >
+                      Take Course Quiz
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </div>
+
+          {/* =================================================================
+              STOCK MEDIA, SOCIAL STUDIO, WEBSITE BUILDER & BUSINESS TOOLS
+             ================================================================= */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            {/* Stock Media (#stock-media) */}
+            <section
+              id="stock-media"
+              className="lg:col-span-4 rounded-2xl border border-[#1B3164] bg-[#0A1329] p-4 space-y-3"
+            >
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  <ImageIcon className="h-4 w-4 text-violet-400" />
+                  <span>Stock Media Library</span>
+                </h3>
+                <select
+                  aria-label="Filter Stock Media"
+                  value={mediaFilter}
+                  onChange={(e) => setMediaFilter(e.target.value)}
+                  className="rounded-lg bg-[#101E3E] border border-[#213B75] px-2 py-1 text-xs text-white"
+                >
+                  <option value="All">All Types</option>
+                  <option value="Photos">Photos</option>
+                  <option value="Vectors">Vectors</option>
+                  <option value="Wallpapers">Wallpapers</option>
+                  <option value="Icons">Icons</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                {STOCK_MEDIA_ITEMS.filter(
+                  (m) => mediaFilter === 'All' || m.type === mediaFilter
+                )
+                  .slice(0, 4)
+                  .map((item) => (
+                    <div
+                      key={item.id}
+                      className="rounded-xl border border-[#192D5C] bg-[#0F1B38] p-2.5 flex items-center justify-between text-xs"
+                    >
+                      <div>
+                        <div className="font-bold text-white">{item.title}</div>
+                        <div className="text-[11px] text-slate-400">
+                          {item.type} • {item.resolutionOrFormat} • {item.license}
+                        </div>
                       </div>
-                    </article>
+                      <button
+                        type="button"
+                        onClick={() => handleOpenTool(PLATFORM_TOOLS[0])}
+                        className="px-2.5 py-1 rounded-lg bg-[#182C59] text-[#00D2FF] font-semibold hover:bg-[#0072FF] hover:text-white transition-colors"
+                      >
+                        Open
+                      </button>
+                    </div>
+                  ))}
+              </div>
+            </section>
+
+            {/* Social Studio & Website Builder (#social-studio, #website-builder) */}
+            <section
+              id="social-studio"
+              className="lg:col-span-4 rounded-2xl border border-[#1B3164] bg-[#0A1329] p-4 space-y-3"
+            >
+              <div id="website-builder" className="flex items-center justify-between">
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Megaphone className="h-4 w-4 text-amber-400" />
+                  <span>Social Studio &amp; Web Builder</span>
+                </h3>
+              </div>
+              <div className="grid grid-cols-2 gap-2.5">
+                {[
+                  { label: 'Thumbnail Maker', toolId: 'tool-social-hashtags' },
+                  { label: 'Caption & Bio AI', toolId: 'tool-social-hashtags' },
+                  { label: 'HTML Live Preview', toolId: 'tool-dev-json' },
+                  { label: 'Color & CSS Studio', toolId: 'tool-color-contrast' },
+                ].map((studio) => (
+                  <button
+                    key={studio.label}
+                    type="button"
+                    onClick={() => {
+                      const found =
+                        PLATFORM_TOOLS.find((t) => t.id === studio.toolId) || PLATFORM_TOOLS[0];
+                      handleOpenTool(found);
+                    }}
+                    className="rounded-xl border border-[#1E3468] bg-[#0F1B38] hover:border-[#00D2FF] p-3 text-left transition-all"
+                  >
+                    <Code2 className="h-4 w-4 text-[#00D2FF] mb-1.5" />
+                    <div className="text-xs font-bold text-white">{studio.label}</div>
+                    <div className="text-[10px] text-slate-400 mt-0.5">Launch Workbench →</div>
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            {/* Business Tools & Task Planner (#business-tools) */}
+            <section
+              id="business-tools"
+              className="lg:col-span-4 rounded-2xl border border-[#1B3164] bg-[#0A1329] p-4 space-y-3"
+            >
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Briefcase className="h-4 w-4 text-[#00D2FF]" />
+                  <span>Business &amp; Task Planner</span>
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const inv =
+                      PLATFORM_TOOLS.find((t) => t.id === 'tool-office-invoice') ||
+                      PLATFORM_TOOLS[0];
+                    handleOpenTool(inv);
+                  }}
+                  className="text-[11px] font-bold text-[#00D2FF] hover:underline"
+                >
+                  Invoice Builder →
+                </button>
+              </div>
+
+              <form onSubmit={handleAddTask} className="flex gap-2">
+                <input
+                  type="text"
+                  value={newTaskText}
+                  onChange={(e) => setNewTaskText(e.target.value)}
+                  placeholder="Add workspace task..."
+                  aria-label="Add workspace task"
+                  className="flex-1 rounded-lg bg-[#0F1B38] border border-[#213B75] px-3 py-1.5 text-xs text-white placeholder:text-slate-400"
+                />
+                <button
+                  type="submit"
+                  className="rounded-lg bg-[#0072FF] px-3 py-1.5 text-xs font-bold text-white"
+                >
+                  Add
+                </button>
+              </form>
+
+              <div className="space-y-1.5 max-h-36 overflow-y-auto">
+                {tasks.map((task) => (
+                  <label
+                    key={task.id}
+                    className="flex items-center gap-2.5 rounded-lg bg-[#0F1B38] px-3 py-2 text-xs cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={task.done}
+                      onChange={() =>
+                        setTasks(
+                          tasks.map((t) => (t.id === task.id ? { ...t, done: !t.done } : t))
+                        )
+                      }
+                      className="rounded border-slate-600 text-[#00D2FF]"
+                    />
+                    <span className={task.done ? 'line-through text-slate-500' : 'text-slate-200'}>
+                      {task.text}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </section>
+          </div>
+
+          {/* =================================================================
+              ENTERTAINMENT & NEWS / COMMUNITY (#entertainment, #news-community)
+             ================================================================= */}
+          <section
+            id="entertainment"
+            className="rounded-2xl border border-[#1B3164] bg-[#0A1329] p-5 space-y-4"
+          >
+            <div id="news-community" className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h2
+                  className="text-lg font-bold text-white flex items-center gap-2"
+                  style={{ fontFamily: 'var(--font-display), sans-serif' }}
+                >
+                  <Newspaper className="h-4 w-4 text-[#00D2FF]" />
+                  <span>Entertainment, Tech News &amp; Community Hub</span>
+                </h2>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {['All', 'AI News', 'Technology News', 'Tutorials', 'Discussion Forum'].map(
+                  (cat) => (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => setCommunityFilter(cat)}
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold ${
+                        communityFilter === cat
+                          ? 'bg-[#0072FF] text-white'
+                          : 'bg-[#101E3E] text-slate-300'
+                      }`}
+                    >
+                      {cat}
+                    </button>
                   )
                 )}
               </div>
             </div>
-          </div>
-        </section>
 
-        {/* =====================================================================
-            P. WHY CHOOSE FALYLIO YARA?
-           ===================================================================== */}
-        <section id="about-platform" className="py-14 lg:py-16 border-b border-slate-200/80 bg-[#F0F7FF]">
-          <div className="mx-auto max-w-[1360px] px-4 sm:px-6 lg:px-8 space-y-8">
-            <div className="max-w-2xl">
-              <div className="text-xs font-medium text-[#0284C7]">14. Platform Principles</div>
-              <h2
-                className="mt-1 text-2xl sm:text-3xl font-bold text-slate-900"
-                style={{ fontFamily: 'var(--font-display), sans-serif' }}
-              >
-                Why Choose Falylio Yara?
-              </h2>
-              <p className="mt-2 text-sm text-slate-600">
-                Designed from the ground up as a trustworthy, welcoming SaaS platform for beginners and professionals alike.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-              {[
-                {
-                  title: 'Easy to Use',
-                  desc: 'Clean visual hierarchy, generous whitespace, and plain human labels with zero clutter.',
-                },
-                {
-                  title: 'Multiple Services',
-                  desc: '17 tool categories, 10 AI assistants, courses, software, and stock media under one roof.',
-                },
-                {
-                  title: 'Organized Resources',
-                  desc: 'Instant global search and structured category filtering find any tool in under two seconds.',
-                },
-                {
-                  title: 'Responsive Experience',
-                  desc: 'Works smoothly across desktop monitors, laptops, tablets, and Android phones (Capacitor-ready).',
-                },
-                {
-                  title: 'Secure User Accounts',
-                  desc: 'Server-side API isolation and Supabase Row-Level Security architecture protect user privacy.',
-                },
-              ].map((benefit, index) => (
-                <div key={benefit.title} className="rounded-xl border border-slate-200/90 bg-white p-5 space-y-2">
-                  <div className="text-xs font-semibold text-[#0284C7] tabular-nums">0{index + 1}.</div>
-                  <h3
-                    className="text-sm font-semibold text-slate-900"
-                    style={{ fontFamily: 'var(--font-display), sans-serif' }}
-                  >
-                    {benefit.title}
-                  </h3>
-                  <p className="text-xs text-slate-600 leading-relaxed">{benefit.desc}</p>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+              {COMMUNITY_POSTS.filter(
+                (post) => communityFilter === 'All' || post.category === communityFilter
+              ).map((post) => (
+                <div
+                  key={post.id}
+                  className="rounded-xl border border-[#1E3468] bg-[#0E1936] p-3.5 flex flex-col justify-between gap-2"
+                >
+                  <div className="space-y-1.5">
+                    <span className="rounded-full bg-[#162954] px-2.5 py-0.5 text-[10px] font-bold text-[#00D2FF]">
+                      {post.category}
+                    </span>
+                    <h3 className="text-xs sm:text-sm font-bold text-white">{post.title}</h3>
+                    <p className="text-[11px] text-slate-300 line-clamp-2">{post.summary}</p>
+                  </div>
+                  <div className="text-[10px] text-slate-400 pt-2 border-t border-white/10 flex items-center justify-between">
+                    <span>{post.author}</span>
+                    <span>{post.repliesCount} replies</span>
+                  </div>
                 </div>
               ))}
             </div>
-          </div>
-        </section>
-      </main>
+          </section>
 
-      {/* =====================================================================
-          Q. FOOTER & INTERACTIVE CONTACT
-         ===================================================================== */}
-      <footer id="contact-footer" className="bg-[#0F172A] text-slate-300 py-14">
-        <div className="mx-auto max-w-[1360px] px-4 sm:px-6 lg:px-8 space-y-12">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-            {/* Brand & About Column */}
-            <div className="lg:col-span-4 space-y-4">
-              <div className="flex items-center gap-2.5">
-                <FyMonogram className="h-8 w-8" />
-                <div>
-                  <div
-                    className="text-lg font-bold text-white"
-                    style={{ fontFamily: 'var(--font-display), sans-serif' }}
-                  >
-                    Falylio Yara
-                  </div>
-                  <div className="text-xs text-sky-400">Dream • Create • Grow</div>
-                </div>
-              </div>
-              <p className="text-xs text-slate-400 leading-relaxed max-w-sm">
-                Falylio Yara is an All-in-One Digital Platform uniting online utilities, Yara AI workspaces, structured education, software directories, stock media, and digital marketplace services.
-              </p>
-              <div className="text-xs text-slate-400 space-x-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAccountModalTab('architecture');
-                    setAccountModalOpen(true);
-                  }}
-                  className="text-sky-400 hover:underline"
-                >
-                  View Phase 1–8 Architecture Status
-                </button>
-              </div>
-            </div>
-
-            {/* Quick Links Columns */}
-            <div className="lg:col-span-4 grid grid-cols-2 gap-6 text-xs">
-              <div className="space-y-2.5">
-                <div className="font-semibold text-white">Platform Directory</div>
-                <ul className="space-y-2 text-slate-400">
-                  <li><a href="#popular-categories" className="hover:text-white">Popular Categories</a></li>
-                  <li><a href="#all-tools" className="hover:text-white">All 17 Tool Categories</a></li>
-                  <li><a href="#ai-center" className="hover:text-white">Yara AI Center</a></li>
-                  <li><a href="#marketplace" className="hover:text-white">Digital Marketplace</a></li>
-                  <li><a href="#education" className="hover:text-white">Education & Courses</a></li>
-                  <li><a href="#stock-media" className="hover:text-white">Stock Media Library</a></li>
-                </ul>
-              </div>
-              <div className="space-y-2.5">
-                <div className="font-semibold text-white">Support & Governance</div>
-                <ul className="space-y-2 text-slate-400">
-                  <li><a href="#about-platform" className="hover:text-white">About Us</a></li>
-                  <li>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setAccountModalTab('auth');
-                        setAccountModalOpen(true);
-                      }}
-                      className="hover:text-white"
-                    >
-                      User Account & Security
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setAccountModalTab('admin');
-                        setAccountModalOpen(true);
-                      }}
-                      className="hover:text-white"
-                    >
-                      Admin Console
-                    </button>
-                  </li>
-                  <li><span>Help Center & Documentation</span></li>
-                  <li><span>Privacy Policy & Terms</span></li>
-                </ul>
-              </div>
-            </div>
-
-            {/* Interactive Contact & Inquiry Box */}
-            <div className="lg:col-span-4 rounded-xl border border-slate-800 bg-slate-900/80 p-5 space-y-3">
-              <div className="text-sm font-semibold text-white">Contact & Partnership Inquiry</div>
-              {contactSubmitted ? (
-                <div className="rounded-lg border border-sky-800 bg-sky-950/60 p-4 text-xs text-sky-200 space-y-2">
-                  <p className="font-semibold">Thank you, {contactName}.</p>
-                  <p>Your message has been logged in the client session. Connect Supabase database tables in Phase 7 to persist support tickets.</p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setContactSubmitted(false);
-                      setContactName('');
-                      setContactEmail('');
-                      setContactMessage('');
-                    }}
-                    className="text-sky-400 underline"
-                  >
-                    Send Another Message
-                  </button>
-                </div>
-              ) : (
-                <form onSubmit={handleContactSubmit} className="space-y-2.5">
-                  <div className="grid grid-cols-2 gap-2">
-                    <input
-                      type="text"
-                      required
-                      aria-label="Your Name"
-                      value={contactName}
-                      onChange={(e) => setContactName(e.target.value)}
-                      placeholder="Your Name"
-                      className="rounded-lg border border-slate-700 bg-slate-800/90 px-3 py-2 text-xs text-white placeholder:text-slate-400 focus:border-sky-400 focus:outline-none"
-                    />
-                    <input
-                      type="email"
-                      required
-                      aria-label="Your Email"
-                      value={contactEmail}
-                      onChange={(e) => setContactEmail(e.target.value)}
-                      placeholder="you@domain.com"
-                      className="rounded-lg border border-slate-700 bg-slate-800/90 px-3 py-2 text-xs text-white placeholder:text-slate-400 focus:border-sky-400 focus:outline-none"
-                    />
-                  </div>
-                  <textarea
-                    rows={2}
-                    required
-                    aria-label="Your Message"
-                    value={contactMessage}
-                    onChange={(e) => setContactMessage(e.target.value)}
-                    placeholder="How can the Falylio Yara team help you?"
-                    className="w-full rounded-lg border border-slate-700 bg-slate-800/90 px-3 py-2 text-xs text-white placeholder:text-slate-400 focus:border-sky-400 focus:outline-none"
+          {/* =================================================================
+              FOOTER & INTERACTIVE CONTACT (#contact-footer)
+             ================================================================= */}
+          <footer
+            id="contact-footer"
+            className="rounded-2xl border border-[#16264C] bg-[#070D1F] p-6 text-slate-300 space-y-6"
+          >
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+              <div className="lg:col-span-4 space-y-3">
+                <div className="flex items-center gap-3">
+                  <img
+                    src="/assets/fy/logo-mark.png"
+                    alt="Falylio Yara"
+                    className="h-10 w-auto object-contain"
                   />
-                  <button
-                    type="submit"
-                    className="w-full rounded-lg bg-[#0284C7] py-2 text-xs font-semibold text-white hover:bg-[#0369A1] transition-colors"
-                  >
-                    Send Inquiry
-                  </button>
-                </form>
-              )}
-            </div>
-          </div>
+                  <div>
+                    <div className="text-base font-extrabold text-white">
+                      Falylio <span className="text-[#00D2FF]">Yara</span>
+                    </div>
+                    <div className="text-[11px] text-slate-400">Dream • Create • Grow</div>
+                  </div>
+                </div>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  All-in-One Digital Platform bringing together Gaming, Online Tools, Yara AI Studio, Apps &amp; Software, Digital Marketplace, Education, and Creator Studios.
+                </p>
+              </div>
 
-          <div className="border-t border-slate-800 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
-            <div>© {new Date().getFullYear()} Falylio Yara. All rights reserved. Dream • Create • Grow.</div>
-            <div>Built with Next.js, TypeScript, Tailwind CSS · Supabase & Capacitor APK Ready</div>
-          </div>
-        </div>
-      </footer>
+              <div className="lg:col-span-4 grid grid-cols-2 gap-4 text-xs">
+                <div className="space-y-2">
+                  <div className="font-bold text-white">Quick Navigation</div>
+                  <ul className="space-y-1.5 text-slate-400">
+                    <li>
+                      <a href="#gaming-zone" className="hover:text-[#00D2FF]">
+                        Gaming Zone
+                      </a>
+                    </li>
+                    <li>
+                      <a href="#all-tools" className="hover:text-[#00D2FF]">
+                        All 17 Tool Categories
+                      </a>
+                    </li>
+                    <li>
+                      <a href="#ai-center" className="hover:text-[#00D2FF]">
+                        Yara AI Center
+                      </a>
+                    </li>
+                    <li>
+                      <a href="#marketplace" className="hover:text-[#00D2FF]">
+                        Digital Marketplace
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+                <div className="space-y-2">
+                  <div className="font-bold text-white">Platform &amp; Account</div>
+                  <ul className="space-y-1.5 text-slate-400">
+                    <li>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAccountModalTab('dashboard');
+                          setAccountModalOpen(true);
+                        }}
+                        className="hover:text-[#00D2FF]"
+                      >
+                        User Dashboard
+                      </button>
+                    </li>
+                    <li>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAccountModalTab('admin');
+                          setAccountModalOpen(true);
+                        }}
+                        className="hover:text-[#00D2FF]"
+                      >
+                        Admin Console
+                      </button>
+                    </li>
+                    <li>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAccountModalTab('architecture');
+                          setAccountModalOpen(true);
+                        }}
+                        className="hover:text-[#00D2FF]"
+                      >
+                        Supabase &amp; APK Status
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="lg:col-span-4 rounded-xl border border-[#1B3164] bg-[#0B142B] p-4 space-y-2.5">
+                <div className="text-xs font-bold text-white">Contact &amp; Support</div>
+                {contactSubmitted ? (
+                  <div className="rounded-lg border border-sky-500/40 bg-sky-950/50 p-3 text-xs text-sky-200 space-y-1.5">
+                    <div className="font-bold">Thank you, {contactName}!</div>
+                    <p>Your inquiry has been received by the Falylio Yara team.</p>
+                  </div>
+                ) : (
+                  <form onSubmit={handleContactSubmit} className="space-y-2">
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        type="text"
+                        required
+                        value={contactName}
+                        onChange={(e) => setContactName(e.target.value)}
+                        placeholder="Your Name"
+                        aria-label="Your Name"
+                        className="rounded-lg bg-[#0F1B38] border border-[#213B75] px-2.5 py-1.5 text-xs text-white"
+                      />
+                      <input
+                        type="email"
+                        required
+                        value={contactEmail}
+                        onChange={(e) => setContactEmail(e.target.value)}
+                        placeholder="Email"
+                        aria-label="Your Email"
+                        className="rounded-lg bg-[#0F1B38] border border-[#213B75] px-2.5 py-1.5 text-xs text-white"
+                      />
+                    </div>
+                    <textarea
+                      rows={2}
+                      required
+                      value={contactMessage}
+                      onChange={(e) => setContactMessage(e.target.value)}
+                      placeholder="Message..."
+                      aria-label="Your Message"
+                      className="w-full rounded-lg bg-[#0F1B38] border border-[#213B75] px-2.5 py-1.5 text-xs text-white"
+                    />
+                    <button
+                      type="submit"
+                      className="w-full rounded-lg bg-gradient-to-r from-[#0072FF] to-[#00D2FF] py-1.5 text-xs font-bold text-white"
+                    >
+                      Send Inquiry
+                    </button>
+                  </form>
+                )}
+              </div>
+            </div>
+
+            <div className="border-t border-[#142242] pt-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-400">
+              <div>© {new Date().getFullYear()} Falylio Yara. All rights reserved. Dream • Create • Grow.</div>
+              <div>All-in-One Digital Platform • Fast &amp; Secure • 100% Free • Worldwide Access</div>
+            </div>
+          </footer>
+        </main>
+      </div>
 
       {/* =====================================================================
           INTERACTIVE MODALS
