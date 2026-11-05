@@ -81,7 +81,11 @@ import {
   CourseQuizModal,
   BrowserGameModal,
 } from './InteractiveWorkbenches';
-import { AccountAndAdminModal } from './AccountAndAdminModal';
+import {
+  AccountAndAdminModal,
+  type AuthenticatedUserSummary,
+} from './AccountAndAdminModal';
+import { createSafeBrowserClient } from '@/utils/supabase/client';
 
 function getIconComponent(iconName: string, className = 'h-5 w-5 text-[#00D2FF]') {
   switch (iconName) {
@@ -243,7 +247,11 @@ export default function FalylioYaraPlatform() {
   const [activeCourseQuiz, setActiveCourseQuiz] = useState<CourseItem | null>(null);
   const [activeGame, setActiveGame] = useState<BrowserGameItem | null>(null);
   const [accountModalOpen, setAccountModalOpen] = useState(false);
-  const [accountModalTab, setAccountModalTab] = useState<'dashboard' | 'auth' | 'admin' | 'architecture'>('dashboard');
+  const [accountModalTab, setAccountModalTab] = useState<
+    'dashboard' | 'auth' | 'profile' | 'saved' | 'security' | 'admin' | 'architecture'
+  >('dashboard');
+  const [authUser, setAuthUser] = useState<AuthenticatedUserSummary | null>(null);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
   // Favorites & Recently Viewed
   const [favoriteIds, setFavoriteIds] = useState<string[]>(['tool-text-counter', 'tool-dev-json']);
@@ -258,6 +266,62 @@ export default function FalylioYaraPlatform() {
     } catch {
       // Ignore storage errors
     }
+
+    // Check server-verified Supabase session on initial load
+    fetch('/api/account', { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data?.authenticated && data?.user) {
+          setAuthUser({
+            id: data.user.id,
+            email: data.user.email,
+            emailConfirmedAt: data.user.emailConfirmedAt,
+            createdAt: data.user.createdAt,
+            fullName: data.profile?.full_name || data.user.email?.split('@')[0],
+            username: data.profile?.username || '',
+            avatarUrl: data.profile?.avatar_url || '/assets/fy/user-avatar.png',
+          });
+          const cloudFavs = Array.isArray(data.favorites)
+            ? data.favorites.map((x: { item_id: string }) => x.item_id)
+            : [];
+          const cloudRecs = Array.isArray(data.recentlyViewed)
+            ? data.recentlyViewed.map((x: { item_id: string }) => x.item_id)
+            : [];
+          if (cloudFavs.length > 0) {
+            setFavoriteIds((prev) => Array.from(new Set([...cloudFavs, ...prev])));
+          }
+          if (cloudRecs.length > 0) {
+            setRecentToolIds((prev) => Array.from(new Set([...cloudRecs, ...prev])).slice(0, 12));
+          }
+        }
+      })
+      .catch(() => {
+        // Ignore offline/unconfigured error
+      });
+
+    // Subscribe to Supabase Auth state changes
+    const supabase = createSafeBrowserClient();
+    const sub = supabase?.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT' || !session?.user) {
+        setAuthUser(null);
+      } else if (session?.user) {
+        setAuthUser({
+          id: session.user.id,
+          email: session.user.email,
+          emailConfirmedAt: session.user.email_confirmed_at,
+          createdAt: session.user.created_at,
+          fullName:
+            session.user.user_metadata?.full_name || session.user.email?.split('@')[0],
+          username: session.user.user_metadata?.username || '',
+          avatarUrl:
+            session.user.user_metadata?.avatar_url || '/assets/fy/user-avatar.png',
+        });
+      }
+    });
+
+    return () => {
+      sub?.data.subscription.unsubscribe();
+    };
   }, []);
 
   // Ctrl + K keyboard shortcut to focus search
@@ -283,6 +347,20 @@ export default function FalylioYaraPlatform() {
       }
       return next;
     });
+
+    if (authUser) {
+      fetch('/api/account', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'toggle_favorite',
+          itemId: id,
+          itemType: 'tool',
+        }),
+      }).catch(() => {
+        // Preserve localStorage if cloud mutation fails
+      });
+    }
   };
 
   const handleOpenTool = (tool: PlatformTool) => {
@@ -296,6 +374,20 @@ export default function FalylioYaraPlatform() {
       }
       return next;
     });
+
+    if (authUser) {
+      fetch('/api/account', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'record_recent',
+          itemId: tool.id,
+          itemType: 'tool',
+        }),
+      }).catch(() => {
+        // Preserve localStorage if cloud mutation fails
+      });
+    }
   };
 
   const filteredTools = filterTools(PLATFORM_TOOLS, {
@@ -642,22 +734,86 @@ export default function FalylioYaraPlatform() {
               </span>
             </button>
 
-            <button
-              type="button"
-              onClick={() => {
-                setAccountModalTab('dashboard');
-                setAccountModalOpen(true);
-              }}
-              className="flex items-center gap-2 rounded-full p-0.5 pr-2 hover:bg-[#101C38] transition-colors"
-              aria-label="User Profile & Account"
-            >
-              <img
-                src="/assets/fy/user-avatar.png"
-                alt="User Profile Avatar"
-                className="h-9 w-9 rounded-full object-cover border border-[#00D2FF]/60"
-              />
-              <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
-            </button>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setProfileMenuOpen((prev) => !prev)}
+                className="flex items-center gap-2 rounded-full p-0.5 pr-2 hover:bg-[#101C38] transition-colors"
+                aria-label="User Profile & Account"
+              >
+                <img
+                  src={authUser?.avatarUrl || '/assets/fy/user-avatar.png'}
+                  alt="User Profile Avatar"
+                  className="h-9 w-9 rounded-full object-cover border border-[#00D2FF]/60"
+                />
+                <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
+              </button>
+
+              {profileMenuOpen && (
+                <div className="absolute right-0 top-full mt-2 w-60 rounded-2xl border border-[#1E3A78] bg-[#0B142B] p-2 shadow-2xl z-50 text-xs">
+                  <div className="px-3 py-2 border-b border-[#162852]">
+                    <div className="font-bold text-white truncate">
+                      {authUser ? authUser.fullName || authUser.email : 'Guest Workspace'}
+                    </div>
+                    <div className="text-[11px] text-[#00D2FF] truncate">
+                      {authUser ? authUser.email : 'Local Storage Active'}
+                    </div>
+                  </div>
+                  <div className="py-1 space-y-0.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setProfileMenuOpen(false);
+                        setAccountModalTab('dashboard');
+                        setAccountModalOpen(true);
+                      }}
+                      className="w-full text-left px-3 py-2 rounded-xl text-slate-200 hover:bg-[#132347] hover:text-white font-medium"
+                    >
+                      Account Overview &amp; Favorites
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setProfileMenuOpen(false);
+                        setAccountModalTab('profile');
+                        setAccountModalOpen(true);
+                      }}
+                      className="w-full text-left px-3 py-2 rounded-xl text-slate-200 hover:bg-[#132347] hover:text-white font-medium"
+                    >
+                      Profile Settings
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setProfileMenuOpen(false);
+                        setAccountModalTab('saved');
+                        setAccountModalOpen(true);
+                      }}
+                      className="w-full text-left px-3 py-2 rounded-xl text-slate-200 hover:bg-[#132347] hover:text-white font-medium"
+                    >
+                      Saved Items
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setProfileMenuOpen(false);
+                        setAccountModalTab('auth');
+                        setAccountModalOpen(true);
+                      }}
+                      className="w-full text-left px-3 py-2 rounded-xl text-[#00D2FF] hover:bg-[#132347] font-bold"
+                    >
+                      {authUser ? 'Session & Security' : 'Login / Sign Up'}
+                    </button>
+                    <a
+                      href="/dashboard"
+                      className="block w-full text-left px-3 py-2 rounded-xl text-slate-200 hover:bg-[#132347] hover:text-white font-medium"
+                    >
+                      Open Full Dashboard Page →
+                    </a>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </header>
 
@@ -2056,6 +2212,17 @@ export default function FalylioYaraPlatform() {
         recentToolIds={recentToolIds}
         onSelectTool={(tool) => handleOpenTool(tool)}
         onRemoveFavorite={handleToggleFavorite}
+        onCloudStateSynced={(mergedFavs, mergedRecs) => {
+          setFavoriteIds(mergedFavs);
+          setRecentToolIds(mergedRecs);
+          try {
+            localStorage.setItem('fy_favorites', JSON.stringify(mergedFavs));
+            localStorage.setItem('fy_recents', JSON.stringify(mergedRecs));
+          } catch {
+            // Ignore
+          }
+        }}
+        onAuthUserChanged={(u) => setAuthUser(u)}
       />
     </div>
   );
