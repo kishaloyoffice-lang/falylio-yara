@@ -241,3 +241,21 @@ create policy "Users can delete their own saved items"
   for delete
   to authenticated
   using (auth.uid() = user_id);
+
+-- =============================================================================
+-- 6. TABLE PRIVILEGES FOR SUPABASE ROLES (Enforced by RLS above)
+-- =============================================================================
+grant usage on schema public to anon, authenticated;
+grant select, insert, update, delete on table
+  public.profiles,
+  public.user_favorites,
+  public.recently_viewed,
+  public.saved_items
+to authenticated;
+grant select on table
+  public.profiles,
+  public.user_favorites,
+  public.recently_viewed,
+  public.saved_items
+to anon;
+

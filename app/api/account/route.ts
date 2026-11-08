@@ -11,7 +11,7 @@ import {
  * Verifies the user session on the server via supabase.auth.getUser() and loads
  * profile, favorites, recently viewed items, and saved items from Supabase.
  */
-export async function GET() {
+export async function GET(req: NextRequest) {
   const diagnostics = getSupabaseEnvDiagnostics();
   if (!diagnostics.isConfigured) {
     return NextResponse.json({
@@ -32,6 +32,23 @@ export async function GET() {
     });
   }
 
+  const checkTables = req.nextUrl.searchParams.get('check_tables') === '1';
+  let tableStatus: Record<string, string> | undefined;
+  if (checkTables) {
+    tableStatus = {};
+    for (const table of ['profiles', 'user_favorites', 'recently_viewed', 'saved_items']) {
+      const { error } = await supabase.from(table).select('*').limit(1);
+      if (!error) {
+        tableStatus[table] = 'READY (Table created & RLS active)';
+      } else if (error.code === '42501') {
+        tableStatus[table] =
+          'CREATED (Run GRANT statement to enable authenticated role access)';
+      } else {
+        tableStatus[table] = `ERROR (${error.code}): ${error.message}`;
+      }
+    }
+  }
+
   const {
     data: { user },
     error: authError,
@@ -41,6 +58,7 @@ export async function GET() {
     return NextResponse.json({
       configured: true,
       diagnostics,
+      tableStatus,
       authenticated: false,
       user: null,
     });
