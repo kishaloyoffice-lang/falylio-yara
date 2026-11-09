@@ -23,6 +23,7 @@ import {
   ExternalLink,
   Copy,
   Check,
+  Chrome,
 } from 'lucide-react';
 import {
   PLATFORM_TOOLS,
@@ -40,6 +41,7 @@ import {
 import {
   getAccountState,
   postAccountAction,
+  signInWithGoogleOAuth,
 } from '@/utils/supabase/account-client';
 import {
   validateAuthInput,
@@ -233,6 +235,17 @@ export function AccountAndAdminModal({
     }
   }, [isOpen, syncAccountFromServer]);
 
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'OAUTH_AUTH_SUCCESS') {
+        syncAccountFromServer(true);
+        setActiveTab('dashboard');
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [syncAccountFromServer]);
+
   if (!isOpen) return null;
 
   const favoriteTools = PLATFORM_TOOLS.filter((t) => favoriteIds.includes(t.id));
@@ -408,6 +421,22 @@ export function AccountAndAdminModal({
       setAuthError(err instanceof Error ? err.message : 'Failed to resend verification code.');
     } finally {
       setResendingCode(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setAuthError(null);
+    setAuthSuccess(null);
+    setAuthLoading(true);
+    try {
+      const res = await signInWithGoogleOAuth('/dashboard');
+      if (!res.ok) {
+        setAuthError(res.error || 'Could not initiate Google Sign-In.');
+        setAuthLoading(false);
+      }
+    } catch (err) {
+      setAuthError(err instanceof Error ? err.message : 'Failed to start Google Sign-In.');
+      setAuthLoading(false);
     }
   };
 
@@ -846,6 +875,27 @@ export function AccountAndAdminModal({
                       : `Connected to Supabase Auth (${DEFAULT_SUPABASE_PROJECT_URL})`}
                   </p>
                 </div>
+
+                {(authMode === 'login' || authMode === 'signup') && (
+                  <div className="space-y-3">
+                    <button
+                      type="button"
+                      disabled={authLoading}
+                      onClick={handleGoogleLogin}
+                      className="w-full flex items-center justify-center gap-2.5 rounded-xl border border-[#2B4C94] bg-[#101F42] hover:bg-[#162B5B] hover:border-[#00D2FF] py-2.5 px-4 text-xs font-bold text-white transition-all shadow-sm disabled:opacity-50"
+                    >
+                      <Chrome className="h-4 w-4 text-[#00D2FF]" />
+                      <span>Continue with Google (One-Click)</span>
+                    </button>
+                    <div className="relative flex items-center py-1">
+                      <div className="flex-grow border-t border-[#1C3264]" />
+                      <span className="mx-3 shrink-0 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                        Or with Email
+                      </span>
+                      <div className="flex-grow border-t border-[#1C3264]" />
+                    </div>
+                  </div>
+                )}
 
                 {authMode === 'signup' && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

@@ -76,8 +76,15 @@ export async function fetchAccountStateDirect() {
   const profileData: UserProfileRecord = profileRes.data || {
     id: user.id,
     username: user.user_metadata?.username || null,
-    full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Falylio Member',
-    avatar_url: user.user_metadata?.avatar_url || '/assets/fy/user-avatar.png',
+    full_name:
+      user.user_metadata?.full_name ||
+      user.user_metadata?.name ||
+      user.email?.split('@')[0] ||
+      'Falylio Member',
+    avatar_url:
+      user.user_metadata?.avatar_url ||
+      user.user_metadata?.picture ||
+      '/assets/fy/user-avatar.png',
     created_at: user.created_at,
     updated_at: user.updated_at || user.created_at,
   };
@@ -347,4 +354,69 @@ export async function postAccountAction(payload: Record<string, unknown>) {
   }
   return await mutateAccountStateDirect(payload);
 }
+
+/**
+ * Initiates Google One-Click OAuth Login via Supabase Auth.
+ * On top-level domains (like falylio-yara.vercel.app), redirects directly.
+ * Inside cross-origin iframes (like AI Studio preview), opens the provider URL in a new tab.
+ */
+export async function signInWithGoogleOAuth(nextPath = '/dashboard'): Promise<{
+  ok: boolean;
+  error?: string;
+  url?: string;
+}> {
+  const supabase = createSafeBrowserClient();
+  if (!supabase) {
+    return {
+      ok: false,
+      error: 'Supabase client is not configured.',
+    };
+  }
+
+  const isIframe =
+    typeof window !== 'undefined' &&
+    (() => {
+      try {
+        return window.self !== window.top;
+      } catch {
+        return true;
+      }
+    })();
+
+  const callbackUrl = new URL('/auth/callback', window.location.origin);
+  callbackUrl.searchParams.set('next', nextPath);
+  if (isIframe) {
+    callbackUrl.searchParams.set('popup', '1');
+  }
+
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: callbackUrl.toString(),
+      skipBrowserRedirect: isIframe,
+      queryParams: {
+        access_type: 'offline',
+        prompt: 'select_account',
+      },
+    },
+  });
+
+  if (error) {
+    return { ok: false, error: error.message };
+  }
+
+  if (isIframe && data?.url) {
+    const link = document.createElement('a');
+    link.href = data.url;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    return { ok: true, url: data.url };
+  }
+
+  return { ok: true, url: data?.url };
+}
+
 

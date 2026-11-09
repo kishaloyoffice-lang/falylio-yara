@@ -15,6 +15,7 @@ import {
   AlertCircle,
   KeyRound,
   Trash2,
+  Chrome,
 } from 'lucide-react';
 import {
   PLATFORM_TOOLS,
@@ -28,6 +29,7 @@ import {
 import {
   getAccountState,
   postAccountAction,
+  signInWithGoogleOAuth,
 } from '@/utils/supabase/account-client';
 import {
   validateAuthInput,
@@ -167,6 +169,16 @@ export default function UserDashboardPage() {
 
   useEffect(() => {
     loadAccountData(false);
+  }, [loadAccountData]);
+
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'OAUTH_AUTH_SUCCESS') {
+        loadAccountData(true);
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
   }, [loadAccountData]);
 
   const handleAuthSubmit = async (e: React.FormEvent) => {
@@ -318,6 +330,24 @@ export default function UserDashboardPage() {
       }
     } finally {
       setResendingCode(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setAuthMessage(null);
+    setAuthLoading(true);
+    try {
+      const res = await signInWithGoogleOAuth('/dashboard');
+      if (!res.ok) {
+        setAuthMessage({ type: 'err', text: res.error || 'Could not start Google Sign-In.' });
+        setAuthLoading(false);
+      }
+    } catch (err) {
+      setAuthMessage({
+        type: 'err',
+        text: err instanceof Error ? err.message : 'Failed to start Google Sign-In.',
+      });
+      setAuthLoading(false);
     }
   };
 
@@ -647,6 +677,26 @@ export default function UserDashboardPage() {
                   </div>
 
                   <form onSubmit={handleAuthSubmit} className="space-y-3.5">
+                    {(authMode === 'login' || authMode === 'signup') && (
+                      <div className="space-y-3">
+                        <button
+                          type="button"
+                          disabled={authLoading}
+                          onClick={handleGoogleLogin}
+                          className="w-full flex items-center justify-center gap-2.5 rounded-xl border border-[#2B4C94] bg-[#101F42] hover:bg-[#162B5B] hover:border-[#00D2FF] py-2.5 px-4 text-xs font-bold text-white transition-all shadow-sm disabled:opacity-50"
+                        >
+                          <Chrome className="h-4 w-4 text-[#00D2FF]" />
+                          <span>Continue with Google (One-Click)</span>
+                        </button>
+                        <div className="relative flex items-center py-0.5">
+                          <div className="flex-grow border-t border-[#1C3264]" />
+                          <span className="mx-3 shrink-0 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                            Or with Email
+                          </span>
+                          <div className="flex-grow border-t border-[#1C3264]" />
+                        </div>
+                      </div>
+                    )}
                     {authMode === 'signup' && (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <input
