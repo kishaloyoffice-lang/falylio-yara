@@ -41,6 +41,21 @@ test('validateAuthInput validates email, password length, and username format', 
   assert.equal(validSignup.sanitizedEmail, 'user@example.com');
   assert.equal(validSignup.sanitizedFullName, 'Amina Rahman');
   assert.equal(validSignup.sanitizedUsername, 'amina_99');
+
+  const invalidOtp = validateAuthInput({
+    mode: 'verify',
+    email: 'user@example.com',
+    otpCode: '123',
+  });
+  assert.equal(invalidOtp.valid, false);
+
+  const validOtp = validateAuthInput({
+    mode: 'verify',
+    email: 'user@example.com',
+    otpCode: ' 482 910 ',
+  });
+  assert.equal(validOtp.valid, true);
+  assert.equal(validOtp.sanitizedOtpCode, '482910');
 });
 
 test('validateProfileUpdate enforces name length and username rules', () => {

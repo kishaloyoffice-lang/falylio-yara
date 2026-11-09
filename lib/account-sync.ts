@@ -38,22 +38,25 @@ export interface AuthValidationResult {
   sanitizedEmail: string;
   sanitizedFullName: string;
   sanitizedUsername: string;
+  sanitizedOtpCode: string;
 }
 
 /**
  * Validates authentication form inputs before sending requests to Supabase Auth.
  */
 export function validateAuthInput(input: {
-  mode: 'login' | 'signup' | 'forgot' | 'reset';
+  mode: 'login' | 'signup' | 'verify' | 'forgot' | 'reset';
   email?: string;
   password?: string;
   confirmPassword?: string;
   fullName?: string;
   username?: string;
+  otpCode?: string;
 }): AuthValidationResult {
   const sanitizedEmail = (input.email || '').trim().toLowerCase();
   const sanitizedFullName = (input.fullName || '').trim();
   const sanitizedUsername = (input.username || '').trim().toLowerCase();
+  const sanitizedOtpCode = (input.otpCode || '').replace(/\s+/g, '').trim();
 
   if (input.mode !== 'reset') {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -64,6 +67,20 @@ export function validateAuthInput(input: {
         sanitizedEmail,
         sanitizedFullName,
         sanitizedUsername,
+        sanitizedOtpCode,
+      };
+    }
+  }
+
+  if (input.mode === 'verify') {
+    if (!/^[0-9A-Za-z]{6,8}$/.test(sanitizedOtpCode)) {
+      return {
+        valid: false,
+        error: 'Please enter a valid 6 to 8 digit verification code.',
+        sanitizedEmail,
+        sanitizedFullName,
+        sanitizedUsername,
+        sanitizedOtpCode,
       };
     }
   }
@@ -77,6 +94,7 @@ export function validateAuthInput(input: {
         sanitizedEmail,
         sanitizedFullName,
         sanitizedUsername,
+        sanitizedOtpCode,
       };
     }
   }
@@ -89,6 +107,7 @@ export function validateAuthInput(input: {
         sanitizedEmail,
         sanitizedFullName,
         sanitizedUsername,
+        sanitizedOtpCode,
       };
     }
   }
@@ -101,6 +120,7 @@ export function validateAuthInput(input: {
         sanitizedEmail,
         sanitizedFullName,
         sanitizedUsername,
+        sanitizedOtpCode,
       };
     }
   }
@@ -110,6 +130,7 @@ export function validateAuthInput(input: {
     sanitizedEmail,
     sanitizedFullName,
     sanitizedUsername,
+    sanitizedOtpCode,
   };
 }
 

@@ -1,0 +1,20 @@
+# =============================================================================
+# FALYLIO YARA — INFINITYFREE / APACHE HTDOCS ROUTING CONFIGURATION
+# Upload all contents of the static build folder into InfinityFree's htdocs/
+# =============================================================================
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Serve existing files or directories directly
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Map clean Next.js routes (/dashboard -> /dashboard.html, /reset-password -> /reset-password.html)
+  RewriteCond %{REQUEST_FILENAME}.html -f
+  RewriteRule ^(.+?)/?$ $1.html [L]
+
+  # Fallback to index.html for client-side navigation
+  RewriteRule ^ index.html [L]
+</IfModule>

@@ -86,6 +86,10 @@ import {
   type AuthenticatedUserSummary,
 } from './AccountAndAdminModal';
 import { createSafeBrowserClient } from '@/utils/supabase/client';
+import {
+  getAccountState,
+  postAccountAction,
+} from '@/utils/supabase/account-client';
 
 function getIconComponent(iconName: string, className = 'h-5 w-5 text-[#00D2FF]') {
   switch (iconName) {
@@ -267,9 +271,8 @@ export default function FalylioYaraPlatform() {
       // Ignore storage errors
     }
 
-    // Check server-verified Supabase session on initial load
-    fetch('/api/account', { cache: 'no-store' })
-      .then((r) => (r.ok ? r.json() : null))
+    // Check Supabase session (via /api/account or direct browser client on static hosts)
+    getAccountState()
       .then((data) => {
         if (data?.authenticated && data?.user) {
           setAuthUser({
@@ -349,14 +352,10 @@ export default function FalylioYaraPlatform() {
     });
 
     if (authUser) {
-      fetch('/api/account', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'toggle_favorite',
-          itemId: id,
-          itemType: 'tool',
-        }),
+      postAccountAction({
+        action: 'toggle_favorite',
+        itemId: id,
+        itemType: 'tool',
       }).catch(() => {
         // Preserve localStorage if cloud mutation fails
       });
@@ -376,14 +375,10 @@ export default function FalylioYaraPlatform() {
     });
 
     if (authUser) {
-      fetch('/api/account', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'record_recent',
-          itemId: tool.id,
-          itemType: 'tool',
-        }),
+      postAccountAction({
+        action: 'record_recent',
+        itemId: tool.id,
+        itemType: 'tool',
       }).catch(() => {
         // Preserve localStorage if cloud mutation fails
       });

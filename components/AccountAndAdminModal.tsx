@@ -38,6 +38,10 @@ import {
   DEFAULT_SUPABASE_PROJECT_URL,
 } from '@/utils/supabase/client';
 import {
+  getAccountState,
+  postAccountAction,
+} from '@/utils/supabase/account-client';
+import {
   validateAuthInput,
   validateProfileUpdate,
   type UserProfileRecord,
@@ -84,13 +88,17 @@ export function AccountAndAdminModal({
     setActiveTab(initialTab);
   }, [initialTab, isOpen]);
 
-  // Auth Modes: login | signup | forgot | reset
-  const [authMode, setAuthMode] = useState<'login' | 'signup' | 'forgot' | 'reset'>('login');
+  // Auth Modes: login | signup | verify | forgot | reset
+  const [authMode, setAuthMode] = useState<'login' | 'signup' | 'verify' | 'forgot' | 'reset'>(
+    'login'
+  );
   const [emailInput, setEmailInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
   const [confirmPasswordInput, setConfirmPasswordInput] = useState('');
   const [signupFullName, setSignupFullName] = useState('');
   const [signupUsername, setSignupUsername] = useState('');
+  const [otpCodeInput, setOtpCodeInput] = useState('');
+  const [resendingCode, setResendingCode] = useState(false);
 
   // Status & Feedback
   const [authLoading, setAuthLoading] = useState(false);
@@ -133,9 +141,8 @@ export function AccountAndAdminModal({
   const syncAccountFromServer = useCallback(
     async (triggerMigration = false) => {
       try {
-        const res = await fetch('/api/account', { cache: 'no-store' });
-        if (!res.ok) return;
-        const data = await res.json();
+        const data = await getAccountState();
+        if (!data) return;
 
         if (data.authenticated && data.user) {
           const userSummary: AuthenticatedUserSummary = {
@@ -178,21 +185,19 @@ export function AccountAndAdminModal({
               // Ignore
             }
 
-            const migRes = await fetch('/api/account', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                action: 'migrate_local',
-                localFavoriteIds: localFavs,
-                localRecentIds: localRecs,
-              }),
+            const migData = await postAccountAction({
+              action: 'migrate_local',
+              localFavoriteIds: localFavs,
+              localRecentIds: localRecs,
             });
-            const migData = await migRes.json();
-            if (migRes.ok && migData.ok) {
+            if (migData?.ok) {
               setMigrationStatus(
                 `Cloud sync complete (${migData.migratedFavoritesCount} new favorites, ${migData.migratedRecentsCount} recent tools migrated).`
               );
-              onCloudStateSynced?.(migData.mergedFavoriteIds, migData.mergedRecentIds);
+              onCloudStateSynced?.(
+                migData.mergedFavoriteIds || [],
+                migData.mergedRecentIds || []
+              );
             }
           } else {
             const cloudFavIds = Array.isArray(data.favorites)
@@ -235,7 +240,7 @@ export function AccountAndAdminModal({
     .map((id) => PLATFORM_TOOLS.find((t) => t.id === id))
     .filter((t): t is PlatformTool => Boolean(t));
 
-  // Handle Login, Registration, Forgot Password, and Password Reset via real Supabase Auth
+  // Handle Login, Registration, Verify Code (OTP), Forgot Password, and Password Reset via real Supabase Auth
   const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError(null);
@@ -248,6 +253,7 @@ export function AccountAndAdminModal({
       confirmPassword: confirmPasswordInput,
       fullName: signupFullName,
       username: signupUsername,
+      otpCode: otpCodeInput,
     });
 
     if (!validation.valid) {
@@ -284,11 +290,40 @@ export function AccountAndAdminModal({
         if (error) {
           setAuthError(error.message);
         } else if (data.user && !data.session) {
+          setEmailInput(validation.sanitizedEmail);
+          setOtpCodeInput('');
+          setAuthMode('verify');
           setAuthSuccess(
-            `Registration submitted for ${validation.sanitizedEmail}! Please check your inbox to verify your email address.`
+            `Verification code sent to ${validation.sanitizedEmail}! Enter the code from your email below to verify and activate your account.`
           );
         } else if (data.session) {
           setAuthSuccess('Account created and signed in! Migrating local workspace to cloud...');
+          await syncAccountFromServer(true);
+          setActiveTab('dashboard');
+        }
+      } else if (authMode === 'verify') {
+        let verifyResult = await supabase.auth.verifyOtp({
+          email: validation.sanitizedEmail,
+          token: validation.sanitizedOtpCode,
+          type: 'signup',
+        });
+
+        if (verifyResult.error) {
+          const fallbackResult = await supabase.auth.verifyOtp({
+            email: validation.sanitizedEmail,
+            token: validation.sanitizedOtpCode,
+            type: 'email',
+          });
+          if (!fallbackResult.error) {
+            verifyResult = fallbackResult;
+          }
+        }
+
+        if (verifyResult.error) {
+          setAuthError(verifyResult.error.message);
+        } else {
+          setAuthSuccess('Account verified and activated! Syncing your workspace to Supabase...');
+          setOtpCodeInput('');
           await syncAccountFromServer(true);
           setActiveTab('dashboard');
         }
@@ -299,7 +334,14 @@ export function AccountAndAdminModal({
         });
 
         if (error) {
-          setAuthError(error.message);
+          if (error.message.toLowerCase().includes('email not confirmed')) {
+            setAuthMode('verify');
+            setAuthError(
+              'Your email is not verified yet. Please enter your verification code below or click "Resend Verification Code".'
+            );
+          } else {
+            setAuthError(error.message);
+          }
         } else if (data.session) {
           setAuthSuccess('Signed in! Syncing your LocalStorage favorites with Supabase...');
           await syncAccountFromServer(true);
@@ -333,6 +375,39 @@ export function AccountAndAdminModal({
       setAuthError(err instanceof Error ? err.message : 'Unexpected authentication error.');
     } finally {
       setAuthLoading(false);
+    }
+  };
+
+  const handleResendVerificationCode = async () => {
+    setAuthError(null);
+    setAuthSuccess(null);
+    const cleanEmail = emailInput.trim().toLowerCase();
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      setAuthError('Please enter your registered email address first.');
+      return;
+    }
+
+    const supabase = createSafeBrowserClient();
+    if (!supabase) {
+      setAuthError('Supabase client is not configured.');
+      return;
+    }
+
+    setResendingCode(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: cleanEmail,
+      });
+      if (error) {
+        setAuthError(error.message);
+      } else {
+        setAuthSuccess(`A new verification code has been sent to ${cleanEmail}.`);
+      }
+    } catch (err) {
+      setAuthError(err instanceof Error ? err.message : 'Failed to resend verification code.');
+    } finally {
+      setResendingCode(false);
     }
   };
 
@@ -372,24 +447,19 @@ export function AccountAndAdminModal({
 
     setProfileSaving(true);
     try {
-      const res = await fetch('/api/account', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'update_profile',
-          fullName: profileFullName,
-          username: profileUsername,
-          avatarUrl: profileAvatarUrl,
-        }),
+      const data = await postAccountAction({
+        action: 'update_profile',
+        fullName: profileFullName,
+        username: profileUsername,
+        avatarUrl: profileAvatarUrl,
       });
-      const data = await res.json();
-      if (!res.ok || !data.ok) {
+      if (!data?.ok) {
         setProfileMessage({
           type: 'err',
-          text: data.error || 'Could not update profile in Supabase.',
+          text: data?.error || 'Could not update profile in Supabase.',
         });
       } else {
-        setProfile(data.profile);
+        if (data.profile) setProfile(data.profile);
         setProfileMessage({
           type: 'ok',
           text: 'Profile saved to Supabase public.profiles!',
@@ -420,19 +490,14 @@ export function AccountAndAdminModal({
     };
 
     if (currentUser) {
-      const res = await fetch('/api/account', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'save_item',
-          itemId,
-          itemType: newSavedType,
-          title: newSavedTitle.trim(),
-        }),
+      const data = await postAccountAction({
+        action: 'save_item',
+        itemId,
+        itemType: newSavedType,
+        title: newSavedTitle.trim(),
       });
-      const data = await res.json();
-      if (res.ok && data.ok && data.savedItem) {
-        setSavedItems((prev) => [data.savedItem, ...prev]);
+      if (data?.ok && data.savedItem) {
+        setSavedItems((prev) => [data.savedItem!, ...prev]);
         setNewSavedTitle('');
         return;
       }
@@ -451,13 +516,9 @@ export function AccountAndAdminModal({
 
   const handleRemoveSavedItem = async (itemId: string) => {
     if (currentUser) {
-      await fetch('/api/account', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'remove_saved_item',
-          itemId,
-        }),
+      await postAccountAction({
+        action: 'remove_saved_item',
+        itemId,
       });
     }
     const next = savedItems.filter((item) => item.item_id !== itemId);
@@ -734,11 +795,12 @@ export function AccountAndAdminModal({
           {/* TAB 2: SUPABASE AUTHENTICATION */}
           {activeTab === 'auth' && (
             <div className="max-w-md mx-auto space-y-4 py-1">
-              <div className="grid grid-cols-4 gap-1 rounded-xl bg-[#0D1834] p-1 border border-[#1B3164]">
+              <div className="grid grid-cols-5 gap-1 rounded-xl bg-[#0D1834] p-1 border border-[#1B3164]">
                 {(
                   [
                     ['login', 'Login'],
                     ['signup', 'Register'],
+                    ['verify', 'Verify Code'],
                     ['forgot', 'Forgot'],
                     ['reset', 'Reset Pass'],
                   ] as const
@@ -751,7 +813,7 @@ export function AccountAndAdminModal({
                       setAuthError(null);
                       setAuthSuccess(null);
                     }}
-                    className={`rounded-lg py-1.5 text-xs font-bold transition-colors ${
+                    className={`rounded-lg py-1.5 text-[11px] font-bold transition-colors ${
                       authMode === m
                         ? 'bg-[#0072FF] text-white'
                         : 'text-slate-400 hover:text-white'
@@ -772,12 +834,16 @@ export function AccountAndAdminModal({
                       ? 'Sign In to Falylio Yara'
                       : authMode === 'signup'
                       ? 'Create Your Falylio Yara Account'
+                      : authMode === 'verify'
+                      ? 'Verify Your Account with Code'
                       : authMode === 'forgot'
                       ? 'Send Password Recovery Email'
                       : 'Update Your Account Password'}
                   </h3>
                   <p className="mt-0.5 text-xs text-slate-400">
-                    Connected to Supabase Auth ({DEFAULT_SUPABASE_PROJECT_URL})
+                    {authMode === 'verify'
+                      ? 'Enter the 6–8 digit verification code sent to your email address'
+                      : `Connected to Supabase Auth (${DEFAULT_SUPABASE_PROJECT_URL})`}
                   </p>
                 </div>
 
@@ -838,7 +904,41 @@ export function AccountAndAdminModal({
                   </div>
                 )}
 
-                {authMode !== 'forgot' && (
+                {authMode === 'verify' && (
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="auth-otp-code"
+                      className="block text-xs font-semibold text-[#00D2FF]"
+                    >
+                      Verification Code (OTP)
+                    </label>
+                    <input
+                      id="auth-otp-code"
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      maxLength={8}
+                      required
+                      value={otpCodeInput}
+                      onChange={(e) => setOtpCodeInput(e.target.value.replace(/\s+/g, ''))}
+                      placeholder="Enter 6–8 digit code"
+                      className="w-full rounded-xl border-2 border-[#00D2FF]/60 bg-[#081024] px-4 py-3 text-center font-mono text-lg font-extrabold tracking-[0.35em] text-white placeholder:tracking-normal placeholder:font-sans placeholder:text-xs placeholder:font-normal placeholder:text-slate-500 focus:border-[#00D2FF] focus:outline-none"
+                    />
+                    <div className="flex items-center justify-between pt-1 text-[11px] text-slate-400">
+                      <span>Didn&apos;t receive the code?</span>
+                      <button
+                        type="button"
+                        disabled={resendingCode}
+                        onClick={handleResendVerificationCode}
+                        className="font-bold text-[#00D2FF] hover:underline disabled:opacity-50"
+                      >
+                        {resendingCode ? 'Sending...' : 'Resend Verification Code'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {authMode !== 'forgot' && authMode !== 'verify' && (
                   <div>
                     <label
                       htmlFor="auth-pass"
@@ -888,7 +988,9 @@ export function AccountAndAdminModal({
                     : authMode === 'login'
                     ? 'Sign In & Sync Workspace'
                     : authMode === 'signup'
-                    ? 'Register Account'
+                    ? 'Register & Send Verification Code'
+                    : authMode === 'verify'
+                    ? 'Verify Code & Activate Account'
                     : authMode === 'forgot'
                     ? 'Send Password Reset Link'
                     : 'Save New Password'}

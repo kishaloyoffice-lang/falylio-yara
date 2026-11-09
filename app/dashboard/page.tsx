@@ -26,6 +26,10 @@ import {
   DEFAULT_SUPABASE_PROJECT_URL,
 } from '@/utils/supabase/client';
 import {
+  getAccountState,
+  postAccountAction,
+} from '@/utils/supabase/account-client';
+import {
   validateAuthInput,
   validateProfileUpdate,
   type UserProfileRecord,
@@ -39,11 +43,13 @@ export default function UserDashboardPage() {
   >('overview');
 
   // Auth State
-  const [authMode, setAuthMode] = useState<'login' | 'signup' | 'forgot'>('login');
+  const [authMode, setAuthMode] = useState<'login' | 'signup' | 'verify' | 'forgot'>('login');
   const [emailInput, setEmailInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
   const [fullNameInput, setFullNameInput] = useState('');
   const [usernameInput, setUsernameInput] = useState('');
+  const [otpCodeInput, setOtpCodeInput] = useState('');
+  const [resendingCode, setResendingCode] = useState(false);
   const [authLoading, setAuthLoading] = useState(false);
   const [authMessage, setAuthMessage] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
 
@@ -97,9 +103,8 @@ export default function UserDashboardPage() {
 
   const loadAccountData = useCallback(async (migrateLocal = false) => {
     try {
-      const res = await fetch('/api/account', { cache: 'no-store' });
-      if (!res.ok) return;
-      const data = await res.json();
+      const data = await getAccountState();
+      if (!data) return;
 
       if (data.authenticated && data.user) {
         setUser(data.user);
@@ -125,19 +130,14 @@ export default function UserDashboardPage() {
             // Ignore
           }
 
-          const migRes = await fetch('/api/account', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              action: 'migrate_local',
-              localFavoriteIds: localFavs,
-              localRecentIds: localRecs,
-            }),
+          const migData = await postAccountAction({
+            action: 'migrate_local',
+            localFavoriteIds: localFavs,
+            localRecentIds: localRecs,
           });
-          const migData = await migRes.json();
-          if (migRes.ok && migData.ok) {
-            setFavoriteIds(migData.mergedFavoriteIds);
-            setRecentIds(migData.mergedRecentIds);
+          if (migData?.ok) {
+            setFavoriteIds(migData.mergedFavoriteIds || []);
+            setRecentIds(migData.mergedRecentIds || []);
             setSyncNotice(
               `Synced LocalStorage to Supabase (${migData.migratedFavoritesCount} favorites, ${migData.migratedRecentsCount} recent tools migrated).`
             );
@@ -179,6 +179,7 @@ export default function UserDashboardPage() {
       password: passwordInput,
       fullName: fullNameInput,
       username: usernameInput,
+      otpCode: otpCodeInput,
     });
 
     if (!validation.valid) {
@@ -214,12 +215,43 @@ export default function UserDashboardPage() {
         if (error) {
           setAuthMessage({ type: 'err', text: error.message });
         } else if (data.user && !data.session) {
+          setEmailInput(validation.sanitizedEmail);
+          setOtpCodeInput('');
+          setAuthMode('verify');
           setAuthMessage({
             type: 'ok',
-            text: `Verification email sent to ${validation.sanitizedEmail}. Confirm your email to activate your account.`,
+            text: `Verification code sent to ${validation.sanitizedEmail}! Enter the 6–8 digit code below to verify and activate your account.`,
           });
         } else if (data.session) {
           setAuthMessage({ type: 'ok', text: 'Account created and signed in!' });
+          await loadAccountData(true);
+        }
+      } else if (authMode === 'verify') {
+        let verifyResult = await supabase.auth.verifyOtp({
+          email: validation.sanitizedEmail,
+          token: validation.sanitizedOtpCode,
+          type: 'signup',
+        });
+
+        if (verifyResult.error) {
+          const fallbackResult = await supabase.auth.verifyOtp({
+            email: validation.sanitizedEmail,
+            token: validation.sanitizedOtpCode,
+            type: 'email',
+          });
+          if (!fallbackResult.error) {
+            verifyResult = fallbackResult;
+          }
+        }
+
+        if (verifyResult.error) {
+          setAuthMessage({ type: 'err', text: verifyResult.error.message });
+        } else {
+          setAuthMessage({
+            type: 'ok',
+            text: 'Account verified and activated! Syncing your workspace...',
+          });
+          setOtpCodeInput('');
           await loadAccountData(true);
         }
       } else if (authMode === 'login') {
@@ -228,7 +260,15 @@ export default function UserDashboardPage() {
           password: passwordInput,
         });
         if (error) {
-          setAuthMessage({ type: 'err', text: error.message });
+          if (error.message.toLowerCase().includes('email not confirmed')) {
+            setAuthMode('verify');
+            setAuthMessage({
+              type: 'err',
+              text: 'Your email is not verified yet. Enter your verification code below or click "Resend Code".',
+            });
+          } else {
+            setAuthMessage({ type: 'err', text: error.message });
+          }
         } else if (data.session) {
           setAuthMessage({ type: 'ok', text: 'Signed in! Migrating local tools to cloud...' });
           await loadAccountData(true);
@@ -248,6 +288,36 @@ export default function UserDashboardPage() {
       }
     } finally {
       setAuthLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    setAuthMessage(null);
+    const cleanEmail = emailInput.trim().toLowerCase();
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      setAuthMessage({ type: 'err', text: 'Please enter your registered email address first.' });
+      return;
+    }
+
+    const supabase = createSafeBrowserClient();
+    if (!supabase) return;
+
+    setResendingCode(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: cleanEmail,
+      });
+      if (error) {
+        setAuthMessage({ type: 'err', text: error.message });
+      } else {
+        setAuthMessage({
+          type: 'ok',
+          text: `A fresh verification code has been sent to ${cleanEmail}.`,
+        });
+      }
+    } finally {
+      setResendingCode(false);
     }
   };
 
@@ -276,21 +346,16 @@ export default function UserDashboardPage() {
 
     setProfSaving(true);
     try {
-      const res = await fetch('/api/account', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'update_profile',
-          fullName: profFullName,
-          username: profUsername,
-          avatarUrl: profAvatar,
-        }),
+      const data = await postAccountAction({
+        action: 'update_profile',
+        fullName: profFullName,
+        username: profUsername,
+        avatarUrl: profAvatar,
       });
-      const data = await res.json();
-      if (!res.ok || !data.ok) {
-        setProfMessage({ type: 'err', text: data.error || 'Failed to update profile.' });
+      if (!data?.ok) {
+        setProfMessage({ type: 'err', text: data?.error || 'Failed to update profile.' });
       } else {
-        setProfile(data.profile);
+        if (data.profile) setProfile(data.profile);
         setProfMessage({ type: 'ok', text: 'Profile updated in Supabase!' });
       }
     } finally {
@@ -309,14 +374,10 @@ export default function UserDashboardPage() {
       // Ignore
     }
     if (user) {
-      await fetch('/api/account', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'toggle_favorite',
-          itemId: toolId,
-          itemType: 'tool',
-        }),
+      await postAccountAction({
+        action: 'toggle_favorite',
+        itemId: toolId,
+        itemType: 'tool',
       });
     }
   };
@@ -335,19 +396,14 @@ export default function UserDashboardPage() {
     };
 
     if (user) {
-      const res = await fetch('/api/account', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'save_item',
-          itemId,
-          itemType: newSavedType,
-          title: newSavedTitle.trim(),
-        }),
+      const data = await postAccountAction({
+        action: 'save_item',
+        itemId,
+        itemType: newSavedType,
+        title: newSavedTitle.trim(),
       });
-      const data = await res.json();
-      if (res.ok && data.ok && data.savedItem) {
-        setSavedItems((prev) => [data.savedItem, ...prev]);
+      if (data?.ok && data.savedItem) {
+        setSavedItems((prev) => [data.savedItem!, ...prev]);
         setNewSavedTitle('');
         return;
       }
@@ -365,13 +421,9 @@ export default function UserDashboardPage() {
 
   const handleRemoveSavedItem = async (itemId: string) => {
     if (user) {
-      await fetch('/api/account', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'remove_saved_item',
-          itemId,
-        }),
+      await postAccountAction({
+        action: 'remove_saved_item',
+        itemId,
       });
     }
     const next = savedItems.filter((i) => i.item_id !== itemId);
@@ -570,8 +622,8 @@ export default function UserDashboardPage() {
 
               {!user && (
                 <div className="rounded-2xl border border-[#1E3468] bg-[#0A1329] p-6 max-w-lg">
-                  <div className="flex gap-2 mb-4">
-                    {(['login', 'signup', 'forgot'] as const).map((m) => (
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {(['login', 'signup', 'verify', 'forgot'] as const).map((m) => (
                       <button
                         key={m}
                         type="button"
@@ -585,7 +637,11 @@ export default function UserDashboardPage() {
                             : 'bg-[#101E3E] text-slate-300'
                         }`}
                       >
-                        {m === 'forgot' ? 'Forgot Password' : m}
+                        {m === 'forgot'
+                          ? 'Forgot Password'
+                          : m === 'verify'
+                          ? 'Verify Code'
+                          : m}
                       </button>
                     ))}
                   </div>
@@ -620,7 +676,34 @@ export default function UserDashboardPage() {
                       aria-label="Email address"
                       className="w-full rounded-xl border border-[#243E7A] bg-[#081024] px-3 py-2 text-xs text-white"
                     />
-                    {authMode !== 'forgot' && (
+                    {authMode === 'verify' && (
+                      <div className="space-y-2">
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          autoComplete="one-time-code"
+                          maxLength={8}
+                          required
+                          value={otpCodeInput}
+                          onChange={(e) => setOtpCodeInput(e.target.value.replace(/\s+/g, ''))}
+                          placeholder="Enter 6–8 digit Verification Code"
+                          aria-label="Verification Code"
+                          className="w-full rounded-xl border-2 border-[#00D2FF]/60 bg-[#081024] px-4 py-3 text-center font-mono text-lg font-extrabold tracking-[0.35em] text-white placeholder:tracking-normal placeholder:font-sans placeholder:text-xs placeholder:font-normal placeholder:text-slate-400"
+                        />
+                        <div className="flex items-center justify-between text-[11px] text-slate-400">
+                          <span>Didn&apos;t receive the verification code?</span>
+                          <button
+                            type="button"
+                            disabled={resendingCode}
+                            onClick={handleResendCode}
+                            className="font-bold text-[#00D2FF] hover:underline disabled:opacity-50"
+                          >
+                            {resendingCode ? 'Sending...' : 'Resend Code'}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    {authMode !== 'forgot' && authMode !== 'verify' && (
                       <input
                         type="password"
                         required
@@ -641,7 +724,9 @@ export default function UserDashboardPage() {
                         : authMode === 'login'
                         ? 'Sign In & Migrate LocalStorage'
                         : authMode === 'signup'
-                        ? 'Create Account'
+                        ? 'Register & Send Verification Code'
+                        : authMode === 'verify'
+                        ? 'Verify Code & Activate Account'
                         : 'Send Recovery Link'}
                     </button>
                     {authMessage && (
