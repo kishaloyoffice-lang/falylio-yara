@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import {
   Search,
   Sparkles,
@@ -215,8 +216,9 @@ export default function FalylioYaraPlatform() {
   const [searchFocused, setSearchFocused] = useState(false);
   const topSearchInputRef = useRef<HTMLInputElement>(null);
 
-  // Hero Slide State
+  // Hero Slide State & Interactive Cursor Spotlight
   const [heroSlideIndex, setHeroSlideIndex] = useState(0);
+  const [cursorSpot, setCursorSpot] = useState({ x: 650, y: 260 });
 
   // Tools Filtering State
   const [selectedToolTab, setSelectedToolTab] = useState<'all' | 'popular' | 'recent' | 'recommended' | 'free'>('all');
@@ -362,6 +364,14 @@ export default function FalylioYaraPlatform() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  // Auto-advance Hero Banner slides every 6 seconds for dynamic motion
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setHeroSlideIndex((prev) => (prev + 1) % HERO_SLIDES.length);
+    }, 6000);
+    return () => clearInterval(timer);
+  }, []);
+
   const handleToggleFavorite = (id: string) => {
     setFavoriteIds((prev) => {
       const next = prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id];
@@ -481,7 +491,44 @@ export default function FalylioYaraPlatform() {
   const currentSlide = HERO_SLIDES[heroSlideIndex];
 
   return (
-    <div id="top" className="min-h-screen bg-[#060B19] text-white flex selection:bg-[#00D2FF]/30 selection:text-white">
+    <div
+      id="top"
+      onMouseMove={(e) => {
+        setCursorSpot({ x: e.clientX, y: e.clientY });
+      }}
+      className="relative min-h-screen bg-[#060B19] text-white flex selection:bg-[#00D2FF]/30 selection:text-white overflow-x-hidden"
+    >
+      {/* AMBIENT FLOATING CYBER ORBS & CURSOR-REACTIVE SPOTLIGHT */}
+      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+        <div
+          className="hidden lg:block absolute h-[520px] w-[520px] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-25 blur-3xl transition-transform duration-150 ease-out"
+          style={{
+            left: cursorSpot.x,
+            top: cursorSpot.y,
+            background:
+              'radial-gradient(circle, rgba(0,210,255,0.28) 0%, rgba(124,58,237,0.12) 45%, transparent 70%)',
+          }}
+        />
+        <motion.div
+          animate={{
+            x: [0, 45, -25, 0],
+            y: [0, -35, 25, 0],
+            scale: [1, 1.12, 0.95, 1],
+          }}
+          transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute -top-24 right-[12%] h-80 w-80 rounded-full bg-[#00A8FF]/10 blur-3xl"
+        />
+        <motion.div
+          animate={{
+            x: [0, -40, 30, 0],
+            y: [0, 40, -30, 0],
+            scale: [1, 1.08, 0.92, 1],
+          }}
+          transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute bottom-10 left-[22%] h-96 w-96 rounded-full bg-purple-600/10 blur-3xl"
+        />
+      </div>
+
       {/* =====================================================================
           MOBILE SIDEBAR BACKDROP
          ===================================================================== */}
@@ -520,13 +567,18 @@ export default function FalylioYaraPlatform() {
               }}
               className="group flex flex-col items-center focus:outline-none"
             >
-              <div className="relative h-14 w-20 flex items-center justify-center">
+              <motion.div
+                animate={{ y: [0, -3.5, 0] }}
+                transition={{ duration: 3.6, repeat: Infinity, ease: 'easeInOut' }}
+                whileHover={{ scale: 1.08, rotate: 2 }}
+                className="relative h-14 w-20 flex items-center justify-center"
+              >
                 <img
                   src="/assets/fy/logo-mark.png"
                   alt="Falylio Yara Crown Emblem"
-                  className="h-14 w-auto object-contain drop-shadow-[0_0_12px_rgba(0,210,255,0.45)]"
+                  className="h-14 w-auto object-contain drop-shadow-[0_0_14px_rgba(0,210,255,0.55)]"
                 />
-              </div>
+              </motion.div>
               <div
                 className="mt-0.5 text-[19px] font-extrabold tracking-tight leading-none"
                 style={{ fontFamily: 'var(--font-display), sans-serif' }}
@@ -540,36 +592,45 @@ export default function FalylioYaraPlatform() {
             </a>
           </div>
 
-          {/* 13 Navigation Links */}
+          {/* 13 Navigation Links with Animated Sliding Pill */}
           <nav className="px-3 py-2.5 space-y-0.5 overflow-y-auto max-h-[calc(100vh-290px)]">
             {SIDEBAR_ITEMS.map((item) => {
               const isActive = activeNav === item.id;
               return (
-                <a
+                <motion.a
                   key={item.id}
                   href={item.href}
+                  whileHover={{ x: 4 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={(e) => {
                     e.preventDefault();
                     scrollToSection(item.href, item.id);
                   }}
-                  className={`flex items-center justify-between px-3.5 py-2 rounded-xl text-[13px] font-medium transition-all ${
+                  className={`relative flex items-center justify-between px-3.5 py-2 rounded-xl text-[13px] font-medium transition-colors ${
                     isActive
-                      ? 'bg-gradient-to-r from-[#00A8FF] via-[#0072FF] to-[#0051D5] text-white font-semibold shadow-[0_0_16px_rgba(0,140,255,0.45)]'
+                      ? 'text-white font-semibold'
                       : 'text-slate-300 hover:text-white hover:bg-[#101C38]'
                   }`}
                 >
-                  <span className="flex items-center gap-3 truncate">
+                  {isActive && (
+                    <motion.div
+                      layoutId="sidebarActivePill"
+                      transition={{ type: 'spring', stiffness: 360, damping: 28 }}
+                      className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#00A8FF] via-[#0072FF] to-[#0051D5] shadow-[0_0_16px_rgba(0,140,255,0.45)]"
+                    />
+                  )}
+                  <span className="relative z-10 flex items-center gap-3 truncate">
                     <span className={isActive ? 'text-white' : 'text-slate-400'}>
                       {item.icon}
                     </span>
                     <span className="truncate">{item.label}</span>
                   </span>
                   {item.badge && (
-                    <span className="ml-2 rounded-full bg-gradient-to-r from-[#7C3AED] to-[#9333EA] px-2 py-0.5 text-[10px] font-bold text-white shadow-[0_0_8px_rgba(147,51,234,0.5)]">
+                    <span className="relative z-10 ml-2 rounded-full bg-gradient-to-r from-[#7C3AED] to-[#9333EA] px-2 py-0.5 text-[10px] font-bold text-white shadow-[0_0_8px_rgba(147,51,234,0.5)]">
                       {item.badge}
                     </span>
                   )}
-                </a>
+                </motion.a>
               );
             })}
           </nav>
@@ -881,15 +942,28 @@ export default function FalylioYaraPlatform() {
           )}
 
           {/* =================================================================
-              HERO BANNER (Matches Reference Design 1:1)
+              HERO BANNER (Matches Reference Design 1:1 with Dynamic Motion)
              ================================================================= */}
-          <section className="relative rounded-2xl overflow-hidden border border-[#1D356B] bg-[#070E22] shadow-[0_10px_40px_rgba(0,0,0,0.65)] min-h-[270px] sm:min-h-[300px] flex items-center">
+          <motion.section
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+            className="relative rounded-2xl overflow-hidden border border-[#1D356B] bg-[#070E22] shadow-[0_10px_40px_rgba(0,0,0,0.65)] min-h-[270px] sm:min-h-[300px] flex items-center"
+          >
             {/* Right Gamer/Creator Artwork & Ambient Cyber Studio Backdrop */}
             <div className="absolute inset-0 pointer-events-none select-none overflow-hidden">
-              <img
+              <motion.img
                 src="/assets/fy/hero-gamer.png"
                 alt="Falylio Yara Digital Studio"
+                animate={{ scale: [1, 1.045, 1], x: [0, -6, 0] }}
+                transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
                 className="absolute right-0 top-0 h-full w-full lg:w-[68%] object-cover object-right opacity-90"
+              />
+              {/* Animated Cyber Light Sweep */}
+              <motion.div
+                animate={{ x: ['-100%', '220%'] }}
+                transition={{ duration: 7, repeat: Infinity, ease: 'linear', repeatDelay: 2 }}
+                className="absolute inset-y-0 w-44 -skew-x-12 bg-gradient-to-r from-transparent via-[#00D2FF]/15 to-transparent"
               />
               {/* Smooth gradient masks so left typography is crisp and readable */}
               <div className="absolute inset-0 bg-gradient-to-r from-[#060C1E] via-[#07112A]/90 lg:via-[#07112A]/65 to-transparent" />
@@ -898,38 +972,64 @@ export default function FalylioYaraPlatform() {
 
             {/* Left / Center Hero Content */}
             <div className="relative z-10 w-full lg:w-[58%] px-5 sm:px-10 pt-6 pb-11 sm:py-6 flex flex-col items-center text-center">
-              {/* Welcome Pill */}
-              <div className="inline-flex items-center gap-2 text-sm sm:text-base font-bold text-white mb-1">
-                <span className="text-lg">👋</span>
-                <span>{currentSlide.welcome}</span>
-                <span className="text-lg">👋</span>
-              </div>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={currentSlide.id}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                  className="flex flex-col items-center"
+                >
+                  {/* Welcome Line */}
+                  <div className="inline-flex items-center gap-2 text-sm sm:text-base font-bold text-white mb-1">
+                    <motion.span
+                      animate={{ rotate: [0, 18, -10, 18, 0] }}
+                      transition={{ duration: 2.2, repeat: Infinity, repeatDelay: 2 }}
+                      className="text-lg inline-block"
+                    >
+                      👋
+                    </motion.span>
+                    <span>{currentSlide.welcome}</span>
+                    <motion.span
+                      animate={{ rotate: [0, -18, 10, -18, 0] }}
+                      transition={{ duration: 2.2, repeat: Infinity, repeatDelay: 2 }}
+                      className="text-lg inline-block"
+                    >
+                      👋
+                    </motion.span>
+                  </div>
 
-              {/* Main Falylio Yara Heading */}
-              <h1
-                className="text-4xl sm:text-5xl md:text-[54px] font-black tracking-tight leading-none drop-shadow-[0_4px_24px_rgba(0,210,255,0.3)]"
-                style={{ fontFamily: 'var(--font-display), sans-serif' }}
-              >
-                <span className="text-white">Falylio </span>
-                <span className="bg-gradient-to-r from-[#00E5FF] via-[#00B8FF] to-[#0088FF] bg-clip-text text-transparent">
-                  Yara
-                </span>
-              </h1>
+                  {/* Main Falylio Yara Heading */}
+                  <h1
+                    className="text-4xl sm:text-5xl md:text-[54px] font-black tracking-tight leading-none drop-shadow-[0_4px_24px_rgba(0,210,255,0.3)]"
+                    style={{ fontFamily: 'var(--font-display), sans-serif' }}
+                  >
+                    <span className="text-white">Falylio </span>
+                    <span className="bg-gradient-to-r from-[#00E5FF] via-[#00B8FF] to-[#0088FF] bg-clip-text text-transparent">
+                      Yara
+                    </span>
+                  </h1>
 
-              {/* Subtitle */}
-              <div className="mt-1.5 text-lg sm:text-2xl font-extrabold tracking-tight">
-                <span className="text-white">All-in-One Digital </span>
-                <span className="text-[#00D2FF]">Platform</span>
-              </div>
+                  {/* Subtitle */}
+                  <div className="mt-1.5 text-lg sm:text-2xl font-extrabold tracking-tight">
+                    <span className="text-white">{currentSlide.subtitle.replace('Platform', '')}</span>
+                    {currentSlide.subtitle.includes('Platform') && (
+                      <span className="text-[#00D2FF]">Platform</span>
+                    )}
+                  </div>
 
-              {/* Tagline */}
-              <p className="mt-1 text-xs sm:text-sm font-semibold text-slate-200 tracking-wide">
-                {currentSlide.tagline}
-              </p>
+                  {/* Tagline */}
+                  <p className="mt-1 text-xs sm:text-sm font-semibold text-slate-200 tracking-wide">
+                    {currentSlide.tagline}
+                  </p>
+                </motion.div>
+              </AnimatePresence>
 
               {/* Hero Search Bar */}
-              <form
+              <motion.form
                 onSubmit={handleHeroSearchSubmit}
+                whileHover={{ scale: 1.01 }}
                 className="mt-4 w-full max-w-lg relative flex items-center"
               >
                 <Search className="h-4 w-4 text-slate-400 absolute left-4 pointer-events-none" />
@@ -941,14 +1041,16 @@ export default function FalylioYaraPlatform() {
                   aria-label="Search for games, tools, apps"
                   className="w-full h-11 rounded-full bg-[#091328]/90 border border-[#244385] pl-11 pr-16 text-xs sm:text-sm text-white placeholder:text-slate-400 focus:outline-none focus:border-[#00D2FF] shadow-[0_0_25px_rgba(0,114,255,0.2)]"
                 />
-                <button
+                <motion.button
                   type="submit"
+                  whileHover={{ scale: 1.08 }}
+                  whileTap={{ scale: 0.94 }}
                   aria-label="Run Hero Search"
                   className="absolute right-1.5 h-8 w-11 rounded-full bg-gradient-to-r from-[#00B4FF] to-[#0066FF] flex items-center justify-center text-white shadow-[0_0_15px_rgba(0,180,255,0.65)] hover:opacity-95 transition-opacity"
                 >
                   <Search className="h-4 w-4" />
-                </button>
-              </form>
+                </motion.button>
+              </motion.form>
 
               {/* 3 Trust Features Row */}
               <div className="mt-4 flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-[11px] sm:text-xs font-medium text-slate-200">
@@ -1003,7 +1105,7 @@ export default function FalylioYaraPlatform() {
                 <ChevronRight className="h-3.5 w-3.5" />
               </button>
             </div>
-          </section>
+          </motion.section>
 
           {/* LIVE ADMIN-PUBLISHED CUSTOM ITEMS (Games, Tools, Courses, Apps, Products) */}
           {adminCustomItems.length > 0 && (
@@ -1172,23 +1274,38 @@ export default function FalylioYaraPlatform() {
                   iconBg: 'bg-yellow-500/20 text-yellow-300 shadow-[0_0_20px_rgba(234,179,8,0.45)]',
                   icon: <Megaphone className="h-6 w-6" />,
                 },
-              ].map((cat) => (
-                <button
+              ].map((cat, idx) => (
+                <motion.button
                   key={cat.id}
                   type="button"
+                  initial={{ opacity: 0, y: 18, scale: 0.92 }}
+                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                  viewport={{ once: true, amount: 0.2 }}
+                  transition={{
+                    delay: idx * 0.045,
+                    type: 'spring',
+                    stiffness: 260,
+                    damping: 20,
+                  }}
+                  whileHover={{ y: -7, scale: 1.04 }}
+                  whileTap={{ scale: 0.96 }}
                   onClick={() => scrollToSection(cat.href, cat.navId)}
-                  className={`group relative rounded-2xl border ${cat.border} bg-gradient-to-b ${cat.glow} p-3.5 flex flex-col items-center justify-between min-h-[112px] text-center transition-all hover:-translate-y-0.5`}
+                  className={`group relative rounded-2xl border ${cat.border} bg-gradient-to-b ${cat.glow} p-3.5 flex flex-col items-center justify-between min-h-[112px] text-center transition-colors`}
                 >
-                  <div className={`h-11 w-11 rounded-2xl flex items-center justify-center ${cat.iconBg}`}>
+                  <motion.div
+                    whileHover={{ rotate: [0, -8, 8, 0], scale: 1.12 }}
+                    transition={{ duration: 0.4 }}
+                    className={`h-11 w-11 rounded-2xl flex items-center justify-center ${cat.iconBg}`}
+                  >
                     {cat.icon}
-                  </div>
+                  </motion.div>
                   <div className="mt-2 text-xs font-bold text-white whitespace-pre-line leading-tight">
                     {cat.title}
                   </div>
                   <span className="absolute bottom-2.5 right-2.5 h-5 w-5 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-300 group-hover:text-white group-hover:border-white/30">
                     <ChevronRight className="h-3 w-3" />
                   </span>
-                </button>
+                </motion.button>
               ))}
             </div>
           </section>
@@ -1199,7 +1316,13 @@ export default function FalylioYaraPlatform() {
              ================================================================= */}
           <section className="grid grid-cols-1 lg:grid-cols-12 gap-4">
             {/* COLUMN 1: Featured Games (5 cols) */}
-            <div className="lg:col-span-5 rounded-2xl border border-[#1B3164] bg-[#0A1329] p-4 flex flex-col justify-between shadow-lg">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.15 }}
+              transition={{ duration: 0.45 }}
+              className="lg:col-span-5 rounded-2xl border border-[#1B3164] bg-[#0A1329] p-4 flex flex-col justify-between shadow-lg"
+            >
               <div className="flex items-center justify-between mb-3">
                 <h3
                   className="text-base font-bold text-white flex items-center gap-2"
@@ -1220,23 +1343,29 @@ export default function FalylioYaraPlatform() {
 
               <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 flex-1">
                 {/* Main Featured Game Card (Battlegrounds Mobile India) */}
-                <div
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => setActiveGame(BROWSER_GAMES[0])}
                   className="sm:col-span-6 relative rounded-xl overflow-hidden border border-[#233E7D] group cursor-pointer min-h-[175px] flex flex-col justify-end p-3"
                 >
                   <img
                     src="/assets/fy/game-bgmi.png"
                     alt="Battlegrounds Mobile India"
-                    className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    className="absolute inset-0 h-full w-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#050B1A] via-[#050B1A]/30 to-transparent" />
                   <div className="relative z-10 flex flex-col items-center text-center">
-                    <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#0099FF] to-[#0055FF] px-4 py-1.5 text-xs font-bold text-white shadow-[0_0_15px_rgba(0,153,255,0.65)]">
+                    <motion.span
+                      animate={{ scale: [1, 1.05, 1] }}
+                      transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+                      className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#0099FF] to-[#0055FF] px-4 py-1.5 text-xs font-bold text-white shadow-[0_0_15px_rgba(0,153,255,0.65)]"
+                    >
                       <span>Play Now</span>
                       <Play className="h-3 w-3 fill-white" />
-                    </span>
+                    </motion.span>
                   </div>
-                </div>
+                </motion.div>
 
                 {/* Right 3 Game Rows */}
                 <div className="sm:col-span-6 flex flex-col justify-between gap-2">
@@ -1260,11 +1389,13 @@ export default function FalylioYaraPlatform() {
                       game: BROWSER_GAMES[2] || BROWSER_GAMES[0],
                     },
                   ].map((item) => (
-                    <button
+                    <motion.button
                       key={item.title}
                       type="button"
+                      whileHover={{ x: 5, scale: 1.015 }}
+                      whileTap={{ scale: 0.98 }}
                       onClick={() => setActiveGame(item.game)}
-                      className="w-full rounded-xl border border-[#192D5C] bg-[#0F1B38]/90 hover:bg-[#142449] hover:border-[#00D2FF]/50 p-2 flex items-center justify-between gap-2.5 transition-all text-left"
+                      className="w-full rounded-xl border border-[#192D5C] bg-[#0F1B38]/90 hover:bg-[#142449] hover:border-[#00D2FF]/50 p-2 flex items-center justify-between gap-2.5 transition-colors text-left"
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
                         <img
@@ -1280,14 +1411,20 @@ export default function FalylioYaraPlatform() {
                       <span className="h-6 w-6 rounded-full bg-[#182952] flex items-center justify-center text-slate-300 shrink-0">
                         <ChevronRight className="h-3.5 w-3.5" />
                       </span>
-                    </button>
+                    </motion.button>
                   ))}
                 </div>
               </div>
-            </div>
+            </motion.div>
 
             {/* COLUMN 2: Trending AI Tools (3.5 -> 3 cols on 12-col grid) */}
-            <div className="lg:col-span-3 rounded-2xl border border-[#1B3164] bg-[#0A1329] p-4 flex flex-col justify-between shadow-lg">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.15 }}
+              transition={{ duration: 0.45, delay: 0.08 }}
+              className="lg:col-span-3 rounded-2xl border border-[#1B3164] bg-[#0A1329] p-4 flex flex-col justify-between shadow-lg"
+            >
               <div className="flex items-center justify-between mb-3">
                 <h3
                   className="text-base font-bold text-white flex items-center gap-1.5"
@@ -1333,11 +1470,13 @@ export default function FalylioYaraPlatform() {
                       YARA_AI_MODULES.find((m) => m.id === 'ai-summarizer') || YARA_AI_MODULES[0],
                   },
                 ].map((ai) => (
-                  <button
+                  <motion.button
                     key={ai.title}
                     type="button"
+                    whileHover={{ x: 5, scale: 1.015 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={() => setActiveAiModule(ai.module)}
-                    className="w-full rounded-xl border border-[#192D5C] bg-[#0F1B38]/90 hover:bg-[#142449] hover:border-[#00D2FF]/50 p-2.5 flex items-center justify-between gap-3 transition-all text-left"
+                    className="w-full rounded-xl border border-[#192D5C] bg-[#0F1B38]/90 hover:bg-[#142449] hover:border-[#00D2FF]/50 p-2.5 flex items-center justify-between gap-3 transition-colors text-left"
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <div
@@ -1353,17 +1492,26 @@ export default function FalylioYaraPlatform() {
                     <span className="h-6 w-6 rounded-full bg-[#182952] flex items-center justify-center text-slate-300 shrink-0">
                       <ChevronRight className="h-3.5 w-3.5" />
                     </span>
-                  </button>
+                  </motion.button>
                 ))}
               </div>
-            </div>
+            </motion.div>
 
             {/* COLUMN 3: Unlock the Power of AI Banner (4 cols) */}
-            <div className="lg:col-span-4 relative rounded-2xl overflow-hidden border border-[#2B4696] bg-[#0B173D] p-5 flex items-center justify-between shadow-[0_0_30px_rgba(0,114,255,0.2)] min-h-[225px]">
-              {/* Right AI Robot Mascot Artwork */}
-              <img
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.15 }}
+              transition={{ duration: 0.45, delay: 0.16 }}
+              whileHover={{ scale: 1.01 }}
+              className="lg:col-span-4 relative rounded-2xl overflow-hidden border border-[#2B4696] bg-[#0B173D] p-5 flex items-center justify-between shadow-[0_0_30px_rgba(0,114,255,0.2)] min-h-[225px]"
+            >
+              {/* Right AI Robot Mascot Artwork with Floating Motion */}
+              <motion.img
                 src="/assets/fy/ai-robot.png"
                 alt="Yara AI Robot Assistant"
+                animate={{ y: [0, -8, 0], rotate: [0, 1.5, -1.5, 0] }}
+                transition={{ duration: 4.2, repeat: Infinity, ease: 'easeInOut' }}
                 className="absolute right-0 bottom-0 h-full w-[45%] object-cover object-right pointer-events-none select-none"
               />
               <div className="absolute inset-0 bg-gradient-to-r from-[#0B173D] via-[#0E1C4A] via-60% to-transparent pointer-events-none" />
@@ -1379,17 +1527,19 @@ export default function FalylioYaraPlatform() {
                   Smarter Tools. Bigger Possibilities.
                 </p>
                 <div className="pt-2">
-                  <button
+                  <motion.button
                     type="button"
+                    whileHover={{ scale: 1.06 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={() => setActiveAiModule(YARA_AI_MODULES[0])}
                     className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#00D2FF] via-[#3A7BD5] to-[#9333EA] px-5 py-2.5 text-xs font-bold text-white shadow-[0_0_20px_rgba(0,210,255,0.5)] hover:opacity-95 transition-opacity"
                   >
                     <span>Try Yara AI Now</span>
                     <ArrowRight className="h-3.5 w-3.5" />
-                  </button>
+                  </motion.button>
                 </div>
               </div>
-            </div>
+            </motion.div>
           </section>
 
           {/* =================================================================
@@ -1436,12 +1586,18 @@ export default function FalylioYaraPlatform() {
                     'from-purple-500/30 via-indigo-600/20 to-[#0F1B38] border-purple-400/35',
                   ];
                   return (
-                    <div
+                    <motion.div
                       key={app.id}
+                      initial={{ opacity: 0, y: 14 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, margin: '-20px' }}
+                      transition={{ duration: 0.35, delay: idx * 0.06 }}
+                      whileHover={{ y: -5, scale: 1.03 }}
+                      whileTap={{ scale: 0.97 }}
                       onClick={() => handleOpenTool(PLATFORM_TOOLS[idx % PLATFORM_TOOLS.length])}
                       className={`group cursor-pointer rounded-xl border bg-gradient-to-b ${
                         gradients[idx % gradients.length]
-                      } p-3 flex flex-col justify-between hover:-translate-y-0.5 transition-all`}
+                      } p-3 flex flex-col justify-between transition-colors shadow-[0_8px_20px_rgba(0,0,0,0.3)] hover:shadow-[0_12px_28px_rgba(0,210,255,0.2)]`}
                     >
                       <div className="flex items-center justify-between">
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-black/30 text-slate-200">
@@ -1450,7 +1606,7 @@ export default function FalylioYaraPlatform() {
                         <span className="text-[11px] font-bold text-amber-300">★ {app.rating}</span>
                       </div>
                       <div className="my-3 flex items-center justify-center">
-                        <div className="h-12 w-12 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center text-white shadow-inner">
+                        <div className="h-12 w-12 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center text-white shadow-inner group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
                           <AppWindow className="h-6 w-6 text-[#00D2FF]" />
                         </div>
                       </div>
@@ -1458,7 +1614,7 @@ export default function FalylioYaraPlatform() {
                         <div className="text-xs font-bold text-white truncate">{app.name}</div>
                         <div className="text-[10px] text-slate-300 truncate">{app.license}</div>
                       </div>
-                    </div>
+                    </motion.div>
                   );
                 })}
               </div>
@@ -1493,10 +1649,16 @@ export default function FalylioYaraPlatform() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {EDUCATION_COURSES.slice(0, 2).map((course, idx) => (
-                  <div
+                  <motion.div
                     key={course.id}
+                    initial={{ opacity: 0, y: 14 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: '-20px' }}
+                    transition={{ duration: 0.35, delay: idx * 0.08 }}
+                    whileHover={{ y: -4, scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={() => setActiveCourseQuiz(course)}
-                    className="group cursor-pointer rounded-xl border border-[#213B75] bg-gradient-to-br from-[#102048] via-[#151D42] to-[#23154B] p-3.5 flex flex-col justify-between hover:border-[#00D2FF] transition-all"
+                    className="group cursor-pointer rounded-xl border border-[#213B75] bg-gradient-to-br from-[#102048] via-[#151D42] to-[#23154B] p-3.5 flex flex-col justify-between hover:border-[#00D2FF] hover:shadow-[0_12px_28px_rgba(0,210,255,0.2)] transition-colors"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span className="rounded-full bg-[#00D2FF]/20 border border-[#00D2FF]/40 px-2.5 py-0.5 text-[10px] font-bold text-[#00D2FF]">
@@ -1521,7 +1683,7 @@ export default function FalylioYaraPlatform() {
                         <ArrowRight className="h-3 w-3 text-[#00D2FF]" />
                       </span>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
             </div>
@@ -1609,16 +1771,22 @@ export default function FalylioYaraPlatform() {
 
             {/* Tools Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-              {filteredTools.map((tool) => {
+              {filteredTools.map((tool, idx) => {
                 const isFav = favoriteIds.includes(tool.id);
                 return (
-                  <div
+                  <motion.div
                     key={tool.id}
-                    className="rounded-xl border border-[#1B3164] bg-[#0E1936]/90 hover:border-[#00D2FF]/60 p-4 flex flex-col justify-between gap-3 transition-all group"
+                    layout
+                    initial={{ opacity: 0, y: 14 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: '-20px' }}
+                    transition={{ duration: 0.3, delay: (idx % 8) * 0.04 }}
+                    whileHover={{ y: -5, scale: 1.015 }}
+                    className="rounded-xl border border-[#1B3164] bg-[#0E1936]/90 hover:border-[#00D2FF]/70 hover:shadow-[0_12px_30px_rgba(0,210,255,0.18)] p-4 flex flex-col justify-between gap-3 transition-colors group"
                   >
                     <div className="space-y-2">
                       <div className="flex items-start justify-between gap-2">
-                        <div className="h-10 w-10 rounded-xl bg-[#14254E] border border-[#25448A] flex items-center justify-center text-[#00D2FF]">
+                        <div className="h-10 w-10 rounded-xl bg-[#14254E] border border-[#25448A] flex items-center justify-center text-[#00D2FF] group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
                           {getIconComponent(tool.iconName, 'h-5 w-5 text-[#00D2FF]')}
                         </div>
                         <div className="flex items-center gap-1.5">
@@ -1647,15 +1815,17 @@ export default function FalylioYaraPlatform() {
                       </p>
                     </div>
 
-                    <button
+                    <motion.button
                       type="button"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.97 }}
                       onClick={() => handleOpenTool(tool)}
                       className="w-full rounded-xl bg-gradient-to-r from-[#0072FF] to-[#00B4FF] py-2 text-xs font-bold text-white shadow-[0_0_12px_rgba(0,114,255,0.35)] hover:opacity-95 transition-opacity flex items-center justify-center gap-1.5"
                     >
                       <span>Open Workbench</span>
-                      <ArrowRight className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
+                      <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
+                    </motion.button>
+                  </motion.div>
                 );
               })}
             </div>
@@ -1692,15 +1862,21 @@ export default function FalylioYaraPlatform() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-              {YARA_AI_MODULES.map((mod) => (
-                <div
+              {YARA_AI_MODULES.map((mod, idx) => (
+                <motion.div
                   key={mod.id}
+                  initial={{ opacity: 0, y: 14 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-20px' }}
+                  transition={{ duration: 0.35, delay: (idx % 5) * 0.05 }}
+                  whileHover={{ y: -5, scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
                   onClick={() => setActiveAiModule(mod)}
-                  className="cursor-pointer rounded-xl border border-[#1F3873] bg-[#0F1D40]/90 hover:border-[#00D2FF] p-3.5 flex flex-col justify-between gap-3 transition-all group"
+                  className="cursor-pointer rounded-xl border border-[#1F3873] bg-[#0F1D40]/90 hover:border-[#00D2FF] hover:shadow-[0_12px_28px_rgba(0,210,255,0.22)] p-3.5 flex flex-col justify-between gap-3 transition-colors group"
                 >
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <div className="h-9 w-9 rounded-xl bg-[#162B5E] border border-[#00D2FF]/40 flex items-center justify-center text-[#00D2FF]">
+                      <div className="h-9 w-9 rounded-xl bg-[#162B5E] border border-[#00D2FF]/40 flex items-center justify-center text-[#00D2FF] group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300">
                         {getIconComponent(mod.iconName, 'h-4 w-4 text-[#00D2FF]')}
                       </div>
                       <span className="rounded-full bg-purple-500/20 border border-purple-400/40 px-2 py-0.5 text-[10px] font-bold text-purple-200">
@@ -1714,9 +1890,9 @@ export default function FalylioYaraPlatform() {
                   </div>
                   <div className="flex items-center justify-between text-[11px] font-bold text-[#00D2FF] pt-1">
                     <span>Open Studio</span>
-                    <ChevronRight className="h-3.5 w-3.5" />
+                    <ChevronRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
           </section>
@@ -1744,10 +1920,15 @@ export default function FalylioYaraPlatform() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-              {BROWSER_GAMES.map((game) => (
-                <div
+              {BROWSER_GAMES.map((game, idx) => (
+                <motion.div
                   key={game.id}
-                  className="rounded-xl border border-[#223A74] bg-[#0F1B38] p-4 flex flex-col justify-between gap-3 hover:border-purple-400 transition-all"
+                  initial={{ opacity: 0, y: 14 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-20px' }}
+                  transition={{ duration: 0.35, delay: idx * 0.06 }}
+                  whileHover={{ y: -5, scale: 1.02 }}
+                  className="rounded-xl border border-[#223A74] bg-[#0F1B38] p-4 flex flex-col justify-between gap-3 hover:border-purple-400 hover:shadow-[0_12px_28px_rgba(168,85,247,0.22)] transition-colors group"
                 >
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-[11px]">
@@ -1756,18 +1937,20 @@ export default function FalylioYaraPlatform() {
                       </span>
                       <span className="text-slate-400">{game.playersCount}</span>
                     </div>
-                    <h3 className="text-sm font-bold text-white">{game.title}</h3>
+                    <h3 className="text-sm font-bold text-white group-hover:text-purple-300 transition-colors">{game.title}</h3>
                     <p className="text-xs text-slate-300">{game.description}</p>
                   </div>
-                  <button
+                  <motion.button
                     type="button"
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
                     onClick={() => setActiveGame(game)}
-                    className="w-full rounded-xl bg-gradient-to-r from-purple-600 to-[#0072FF] py-2 text-xs font-bold text-white flex items-center justify-center gap-1.5 hover:opacity-95"
+                    className="w-full rounded-xl bg-gradient-to-r from-purple-600 to-[#0072FF] py-2 text-xs font-bold text-white flex items-center justify-center gap-1.5 hover:opacity-95 shadow-[0_0_14px_rgba(147,51,234,0.35)]"
                   >
                     <Play className="h-3.5 w-3.5 fill-white" />
                     <span>Play in Browser</span>
-                  </button>
-                </div>
+                  </motion.button>
+                </motion.div>
               ))}
             </div>
           </section>
