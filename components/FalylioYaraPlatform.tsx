@@ -96,6 +96,10 @@ import {
   type PlatformAnnouncementRecord,
   type PlatformCustomItemRecord,
 } from '@/utils/supabase/admin-client';
+import {
+  PWAInstallButton,
+  OfflineConnectivityIndicator,
+} from './PWAInstallPrompt';
 
 function getIconComponent(iconName: string, className = 'h-5 w-5 text-[#00D2FF]') {
   switch (iconName) {
@@ -664,6 +668,9 @@ export default function FalylioYaraPlatform() {
             </button>
           </div>
 
+          {/* Install Mobile & Desktop App (PWA) Card */}
+          <PWAInstallButton variant="sidebar" />
+
           {/* Bottom 3 Circular Utility Buttons */}
           <div className="flex items-center justify-around pt-0.5">
             <button
@@ -783,8 +790,10 @@ export default function FalylioYaraPlatform() {
             </div>
           </div>
 
-          {/* Right Header Controls: Yara AI Button + Bell Badge + User Profile */}
-          <div className="flex items-center gap-3 sm:gap-4 shrink-0">
+          {/* Right Header Controls: Install PWA Button + Yara AI Button + Bell Badge + User Profile */}
+          <div className="flex items-center gap-2.5 sm:gap-3.5 shrink-0">
+            <PWAInstallButton variant="header" />
+
             <button
               type="button"
               onClick={() => setActiveAiModule(YARA_AI_MODULES[0])}
@@ -915,6 +924,7 @@ export default function FalylioYaraPlatform() {
 
         {/* MAIN SCROLLABLE WORKSPACE */}
         <main className="flex-1 px-4 lg:px-5 py-4 space-y-5 max-w-[1600px] w-full mx-auto">
+          <OfflineConnectivityIndicator />
           {/* LIVE SUPABASE ADMIN ANNOUNCEMENT BANNER */}
           {adminAnnouncements.length > 0 && (
             <div className="rounded-2xl border border-amber-400/40 bg-gradient-to-r from-[#1A1438] via-[#0E1E45] to-[#0A1838] px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-[0_0_24px_rgba(0,168,255,0.2)]">
