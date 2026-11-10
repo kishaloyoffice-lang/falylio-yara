@@ -100,6 +100,7 @@ import {
   PWAInstallButton,
   OfflineConnectivityIndicator,
 } from './PWAInstallPrompt';
+import { RealtimeCommunityHub } from './RealtimeCommunityHub';
 
 function getIconComponent(iconName: string, className = 'h-5 w-5 text-[#00D2FF]') {
   switch (iconName) {
@@ -2283,65 +2284,15 @@ export default function FalylioYaraPlatform() {
           </div>
 
           {/* =================================================================
-              ENTERTAINMENT & NEWS / COMMUNITY (#entertainment, #news-community)
+              REAL-TIME LIVE COMMUNITY CHAT & FEEDBACK WALL (#entertainment, #news-community)
              ================================================================= */}
-          <section
-            id="entertainment"
-            className="rounded-2xl border border-[#1B3164] bg-[#0A1329] p-5 space-y-4"
-          >
-            <div id="news-community" className="flex flex-wrap items-center justify-between gap-2">
-              <div>
-                <h2
-                  className="text-lg font-bold text-white flex items-center gap-2"
-                  style={{ fontFamily: 'var(--font-display), sans-serif' }}
-                >
-                  <Newspaper className="h-4 w-4 text-[#00D2FF]" />
-                  <span>Entertainment, Tech News &amp; Community Hub</span>
-                </h2>
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {['All', 'AI News', 'Technology News', 'Tutorials', 'Discussion Forum'].map(
-                  (cat) => (
-                    <button
-                      key={cat}
-                      type="button"
-                      onClick={() => setCommunityFilter(cat)}
-                      className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold ${
-                        communityFilter === cat
-                          ? 'bg-[#0072FF] text-white'
-                          : 'bg-[#101E3E] text-slate-300'
-                      }`}
-                    >
-                      {cat}
-                    </button>
-                  )
-                )}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-              {COMMUNITY_POSTS.filter(
-                (post) => communityFilter === 'All' || post.category === communityFilter
-              ).map((post) => (
-                <div
-                  key={post.id}
-                  className="rounded-xl border border-[#1E3468] bg-[#0E1936] p-3.5 flex flex-col justify-between gap-2"
-                >
-                  <div className="space-y-1.5">
-                    <span className="rounded-full bg-[#162954] px-2.5 py-0.5 text-[10px] font-bold text-[#00D2FF]">
-                      {post.category}
-                    </span>
-                    <h3 className="text-xs sm:text-sm font-bold text-white">{post.title}</h3>
-                    <p className="text-[11px] text-slate-300 line-clamp-2">{post.summary}</p>
-                  </div>
-                  <div className="text-[10px] text-slate-400 pt-2 border-t border-white/10 flex items-center justify-between">
-                    <span>{post.author}</span>
-                    <span>{post.repliesCount} replies</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
+          <RealtimeCommunityHub
+            authUser={authUser}
+            onRequestLogin={() => {
+              setAccountModalTab('auth');
+              setAccountModalOpen(true);
+            }}
+          />
 
           {/* =================================================================
               FOOTER & INTERACTIVE CONTACT (#contact-footer)
