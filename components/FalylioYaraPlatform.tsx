@@ -101,6 +101,7 @@ import {
   OfflineConnectivityIndicator,
 } from './PWAInstallPrompt';
 import { RealtimeCommunityHub } from './RealtimeCommunityHub';
+import { YaraVoiceAndImageStudio } from './YaraVoiceAndImageStudio';
 
 function getIconComponent(iconName: string, className = 'h-5 w-5 text-[#00D2FF]') {
   switch (iconName) {
@@ -1872,7 +1873,15 @@ export default function FalylioYaraPlatform() {
               </button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            {/* Interactive Yara AI Voice & Image Studio (AI Image/Logo Generator + Bangla/English Voice Assistant) */}
+            <YaraVoiceAndImageStudio />
+
+            <div className="pt-2">
+              <div className="text-xs font-bold uppercase tracking-wider text-slate-300 mb-3 flex items-center gap-2">
+                <Sparkles className="h-3.5 w-3.5 text-[#00D2FF]" />
+                <span>All 10 Specialized Yara AI Assistants</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
               {YARA_AI_MODULES.map((mod, idx) => (
                 <motion.div
                   key={mod.id}
@@ -1905,6 +1914,7 @@ export default function FalylioYaraPlatform() {
                   </div>
                 </motion.div>
               ))}
+              </div>
             </div>
           </section>
 

@@ -1,6 +1,6 @@
 {
   "name": "Falylio Yara",
   "description": "Dream • Create • Grow — Professional All-in-One Digital Platform uniting online utilities, Yara AI Center, education, productivity suites, apps, stock media, and digital marketplace.",
-  "requestFramePermissions": [],
+  "requestFramePermissions": ["microphone"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
