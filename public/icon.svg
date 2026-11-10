@@ -11,8 +11,8 @@
       <stop offset="100%" stop-color="#9333EA" />
     </linearGradient>
   </defs>
-  <rect width="512" height="512" rx="112" fill="url(#fyBg)" />
-  <circle cx="256" cy="256" r="204" stroke="url(#fyCrown)" stroke-width="14" stroke-opacity="0.85" />
+  <circle cx="256" cy="256" r="248" fill="url(#fyBg)" stroke="url(#fyCrown)" stroke-width="14" />
+  <circle cx="256" cy="256" r="212" stroke="#00D2FF" stroke-width="4" stroke-opacity="0.35" />
   <path
     d="M132 332L156 188L222 252L256 164L290 252L356 188L380 332H132Z"
     fill="url(#fyCrown)"

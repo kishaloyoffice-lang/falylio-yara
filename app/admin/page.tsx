@@ -18,11 +18,13 @@ export default function AdminControlPanelPage() {
             <span>Back to Platform</span>
           </Link>
           <div className="flex items-center gap-2.5">
-            <img
-              src="/assets/fy/logo-mark.png"
-              alt="Falylio Yara"
-              className="h-8 w-auto object-contain"
-            />
+            <div className="h-9 w-9 rounded-full bg-gradient-to-br from-[#0B193D] to-[#1D1145] border border-[#00D2FF]/75 shadow-[0_0_14px_rgba(0,210,255,0.4)] flex items-center justify-center overflow-hidden p-1 shrink-0">
+              <img
+                src="/assets/fy/logo-mark.png"
+                alt="Falylio Yara"
+                className="h-full w-full rounded-full object-contain"
+              />
+            </div>
             <span className="text-base font-extrabold flex items-center gap-2">
               <span>
                 Falylio <span className="text-[#00D2FF]">Yara</span> Admin Center

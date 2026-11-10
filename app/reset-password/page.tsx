@@ -57,11 +57,13 @@ export default function ResetPasswordPage() {
     <div className="min-h-screen bg-[#060B19] text-white flex items-center justify-center p-4">
       <div className="w-full max-w-md rounded-2xl border border-[#1E3468] bg-[#0A1329] p-6 space-y-5 shadow-2xl">
         <div className="flex items-center gap-3">
-          <img
-            src="/assets/fy/logo-mark.png"
-            alt="Falylio Yara"
-            className="h-10 w-auto object-contain"
-          />
+          <div className="h-11 w-11 rounded-full bg-gradient-to-br from-[#0B193D] to-[#1D1145] border border-[#00D2FF]/75 shadow-[0_0_16px_rgba(0,210,255,0.4)] flex items-center justify-center overflow-hidden p-1.5 shrink-0">
+            <img
+              src="/assets/fy/logo-mark.png"
+              alt="Falylio Yara"
+              className="h-full w-full rounded-full object-contain"
+            />
+          </div>
           <div>
             <h1 className="text-lg font-extrabold text-white">Reset Your Password</h1>
             <p className="text-xs text-slate-400">Falylio Yara Account Security</p>

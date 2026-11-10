@@ -574,17 +574,17 @@ export default function FalylioYaraPlatform() {
               <motion.div
                 animate={{ y: [0, -3.5, 0] }}
                 transition={{ duration: 3.6, repeat: Infinity, ease: 'easeInOut' }}
-                whileHover={{ scale: 1.08, rotate: 2 }}
-                className="relative h-14 w-20 flex items-center justify-center"
+                whileHover={{ scale: 1.08, rotate: 4 }}
+                className="relative h-16 w-16 rounded-full bg-gradient-to-br from-[#0B193D] via-[#0F2454] to-[#1D1145] border-2 border-[#00D2FF]/80 shadow-[0_0_22px_rgba(0,210,255,0.55)] flex items-center justify-center overflow-hidden p-2 ring-4 ring-[#00D2FF]/15"
               >
                 <img
                   src="/assets/fy/logo-mark.png"
                   alt="Falylio Yara Crown Emblem"
-                  className="h-14 w-auto object-contain drop-shadow-[0_0_14px_rgba(0,210,255,0.55)]"
+                  className="h-full w-full rounded-full object-contain drop-shadow-[0_0_10px_rgba(0,210,255,0.75)]"
                 />
               </motion.div>
               <div
-                className="mt-0.5 text-[19px] font-extrabold tracking-tight leading-none"
+                className="mt-1.5 text-[19px] font-extrabold tracking-tight leading-none"
                 style={{ fontFamily: 'var(--font-display), sans-serif' }}
               >
                 <span className="text-white">Falylio </span>
@@ -2353,11 +2353,13 @@ export default function FalylioYaraPlatform() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
               <div className="lg:col-span-4 space-y-3">
                 <div className="flex items-center gap-3">
-                  <img
-                    src="/assets/fy/logo-mark.png"
-                    alt="Falylio Yara"
-                    className="h-10 w-auto object-contain"
-                  />
+                  <div className="h-11 w-11 rounded-full bg-gradient-to-br from-[#0B193D] to-[#1D1145] border border-[#00D2FF]/75 shadow-[0_0_16px_rgba(0,210,255,0.4)] flex items-center justify-center overflow-hidden p-1.5 shrink-0">
+                    <img
+                      src="/assets/fy/logo-mark.png"
+                      alt="Falylio Yara"
+                      className="h-full w-full rounded-full object-contain"
+                    />
+                  </div>
                   <div>
                     <div className="text-base font-extrabold text-white">
                       Falylio <span className="text-[#00D2FF]">Yara</span>
