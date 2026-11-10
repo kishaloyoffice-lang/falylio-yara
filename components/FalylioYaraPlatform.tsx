@@ -90,6 +90,11 @@ import {
   getAccountState,
   postAccountAction,
 } from '@/utils/supabase/account-client';
+import {
+  fetchPublicAdminContent,
+  type PlatformAnnouncementRecord,
+  type PlatformCustomItemRecord,
+} from '@/utils/supabase/admin-client';
 
 function getIconComponent(iconName: string, className = 'h-5 w-5 text-[#00D2FF]') {
   switch (iconName) {
@@ -261,6 +266,21 @@ export default function FalylioYaraPlatform() {
   const [favoriteIds, setFavoriteIds] = useState<string[]>(['tool-text-counter', 'tool-dev-json']);
   const [recentToolIds, setRecentToolIds] = useState<string[]>(['tool-office-invoice']);
 
+  // Live Admin Announcements & Custom Catalog Items (from Supabase)
+  const [adminAnnouncements, setAdminAnnouncements] = useState<PlatformAnnouncementRecord[]>([]);
+  const [adminCustomItems, setAdminCustomItems] = useState<PlatformCustomItemRecord[]>([]);
+
+  const refreshPublicAdminContent = () => {
+    fetchPublicAdminContent()
+      .then((res) => {
+        setAdminAnnouncements(res.announcements);
+        setAdminCustomItems(res.customItems);
+      })
+      .catch(() => {
+        // Ignore offline error
+      });
+  };
+
   useEffect(() => {
     try {
       const savedFavs = localStorage.getItem('fy_favorites');
@@ -270,6 +290,8 @@ export default function FalylioYaraPlatform() {
     } catch {
       // Ignore storage errors
     }
+
+    refreshPublicAdminContent();
 
     // Check Supabase session (via /api/account or direct browser client on static hosts)
     getAccountState()
@@ -799,11 +821,29 @@ export default function FalylioYaraPlatform() {
                     >
                       {authUser ? 'Session & Security' : 'Login / Sign Up'}
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setProfileMenuOpen(false);
+                        setAccountModalTab('admin');
+                        setAccountModalOpen(true);
+                      }}
+                      className="w-full text-left px-3 py-2 rounded-xl text-amber-300 hover:bg-[#132347] font-bold flex items-center justify-between"
+                    >
+                      <span>Admin Control Panel</span>
+                      <Shield className="h-3.5 w-3.5 text-amber-400" />
+                    </button>
                     <a
                       href="/dashboard"
                       className="block w-full text-left px-3 py-2 rounded-xl text-slate-200 hover:bg-[#132347] hover:text-white font-medium"
                     >
                       Open Full Dashboard Page →
+                    </a>
+                    <a
+                      href="/admin"
+                      className="block w-full text-left px-3 py-2 rounded-xl text-amber-300/90 hover:bg-[#132347] hover:text-amber-200 font-medium"
+                    >
+                      Open Full Admin Center →
                     </a>
                   </div>
                 </div>
@@ -814,6 +854,32 @@ export default function FalylioYaraPlatform() {
 
         {/* MAIN SCROLLABLE WORKSPACE */}
         <main className="flex-1 px-4 lg:px-5 py-4 space-y-5 max-w-[1600px] w-full mx-auto">
+          {/* LIVE SUPABASE ADMIN ANNOUNCEMENT BANNER */}
+          {adminAnnouncements.length > 0 && (
+            <div className="rounded-2xl border border-amber-400/40 bg-gradient-to-r from-[#1A1438] via-[#0E1E45] to-[#0A1838] px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-[0_0_24px_rgba(0,168,255,0.2)]">
+              <div className="flex items-center gap-3 min-w-0">
+                <span className="rounded-lg bg-amber-500 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-slate-950 shrink-0">
+                  {adminAnnouncements[0].badge || 'LIVE'}
+                </span>
+                <div className="text-xs sm:text-sm text-white truncate">
+                  <strong className="font-extrabold text-[#00D2FF] mr-2">
+                    {adminAnnouncements[0].title}:
+                  </strong>
+                  <span className="text-slate-200">{adminAnnouncements[0].message}</span>
+                </div>
+              </div>
+              {adminAnnouncements[0].link_url && (
+                <a
+                  href={adminAnnouncements[0].link_url}
+                  className="inline-flex items-center gap-1 rounded-xl bg-[#0072FF] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#0055FF] shrink-0"
+                >
+                  <span>Explore</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </a>
+              )}
+            </div>
+          )}
+
           {/* =================================================================
               HERO BANNER (Matches Reference Design 1:1)
              ================================================================= */}
@@ -938,6 +1004,69 @@ export default function FalylioYaraPlatform() {
               </button>
             </div>
           </section>
+
+          {/* LIVE ADMIN-PUBLISHED CUSTOM ITEMS (Games, Tools, Courses, Apps, Products) */}
+          {adminCustomItems.length > 0 && (
+            <section className="space-y-3 rounded-2xl border border-[#1E3A78] bg-[#09132B]/90 p-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm sm:text-base font-extrabold text-white flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-[#00D2FF]" />
+                  <span>Newly Added by Admin ({adminCustomItems.length})</span>
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAccountModalTab('admin');
+                    setAccountModalOpen(true);
+                  }}
+                  className="text-xs font-bold text-[#00D2FF] hover:underline"
+                >
+                  Manage in Admin Panel →
+                </button>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {adminCustomItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className="rounded-xl border border-[#213B79] bg-[#0D1A3A] p-3.5 flex flex-col justify-between gap-2.5 hover:border-[#00D2FF] transition-all"
+                  >
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="rounded-md bg-[#0072FF]/25 border border-[#00D2FF]/40 px-2 py-0.5 text-[10px] font-extrabold uppercase text-[#00D2FF]">
+                          {item.section_type} • {item.category}
+                        </span>
+                        <span className="rounded-md bg-purple-500/20 px-2 py-0.5 text-[10px] font-bold text-purple-300">
+                          {item.badge}
+                        </span>
+                      </div>
+                      <h3 className="text-sm font-bold text-white">{item.title}</h3>
+                      <p className="text-xs text-slate-300 line-clamp-2">{item.description}</p>
+                    </div>
+                    <div className="flex items-center justify-between pt-2 border-t border-[#182C5A]">
+                      <span className="text-[11px] font-bold text-emerald-300">
+                        {item.price_label}
+                      </span>
+                      {item.action_url ? (
+                        <a
+                          href={item.action_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 rounded-lg bg-[#0072FF] px-3 py-1 text-xs font-bold text-white hover:bg-[#0055FF]"
+                        >
+                          <span>Open</span>
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                      ) : (
+                        <span className="text-[11px] text-[#00D2FF] font-semibold">
+                          Official Platform Item
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
 
           {/* =================================================================
               POPULAR CATEGORIES (8 Glowing Cards Row)
@@ -2218,6 +2347,7 @@ export default function FalylioYaraPlatform() {
           }
         }}
         onAuthUserChanged={(u) => setAuthUser(u)}
+        onAdminContentChanged={refreshPublicAdminContent}
       />
     </div>
   );

@@ -49,6 +49,7 @@ import {
   type UserProfileRecord,
   type SavedItemRecord,
 } from '@/lib/account-sync';
+import { AdminControlPanelView } from './AdminControlPanelView';
 
 export interface AuthenticatedUserSummary {
   id: string;
@@ -70,6 +71,7 @@ export function AccountAndAdminModal({
   onRemoveFavorite,
   onCloudStateSynced,
   onAuthUserChanged,
+  onAdminContentChanged,
 }: {
   isOpen: boolean;
   initialTab?: 'dashboard' | 'auth' | 'profile' | 'saved' | 'security' | 'admin' | 'architecture';
@@ -80,6 +82,7 @@ export function AccountAndAdminModal({
   onRemoveFavorite: (id: string) => void;
   onCloudStateSynced?: (mergedFavorites: string[], mergedRecents: string[]) => void;
   onAuthUserChanged?: (user: AuthenticatedUserSummary | null) => void;
+  onAdminContentChanged?: () => void;
 }) {
   const [activeTab, setActiveTab] = useState<
     'dashboard' | 'auth' | 'profile' | 'saved' | 'security' | 'admin' | 'architecture'
@@ -1286,26 +1289,7 @@ export function AccountAndAdminModal({
 
           {/* TAB 6: ADMIN CONSOLE */}
           {activeTab === 'admin' && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 tabular-nums">
-                <div className="rounded-xl border border-[#1B3164] bg-[#0D1834] p-3.5">
-                  <span className="text-xs text-slate-400">Tool Categories</span>
-                  <p className="mt-1 text-xl font-bold text-white">{ALL_TOOL_CATEGORIES.length}</p>
-                </div>
-                <div className="rounded-xl border border-[#1B3164] bg-[#0D1834] p-3.5">
-                  <span className="text-xs text-slate-400">Active Tools</span>
-                  <p className="mt-1 text-xl font-bold text-white">{PLATFORM_TOOLS.length}</p>
-                </div>
-                <div className="rounded-xl border border-[#1B3164] bg-[#0D1834] p-3.5">
-                  <span className="text-xs text-slate-400">Courses</span>
-                  <p className="mt-1 text-xl font-bold text-white">{EDUCATION_COURSES.length}</p>
-                </div>
-                <div className="rounded-xl border border-[#1B3164] bg-[#0D1834] p-3.5">
-                  <span className="text-xs text-slate-400">Marketplace Assets</span>
-                  <p className="mt-1 text-xl font-bold text-white">{MARKETPLACE_PRODUCTS.length}</p>
-                </div>
-              </div>
-            </div>
+            <AdminControlPanelView onContentChanged={onAdminContentChanged} />
           )}
         </div>
       </div>
